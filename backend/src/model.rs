@@ -34,9 +34,51 @@ pub struct LoginUserSchema {
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Claims {
     pub sub: uuid::Uuid,
     pub iat: i64,
     pub exp: i64,
+}
+
+// Focus session
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct FocusSession {
+    pub id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
+    pub start_time: DateTime<Utc>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub goal_seconds: i64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl FocusSession {
+    pub fn set_end_time(&mut self, end_time: DateTime<Utc>) {
+        self.end_time = Some(end_time);
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct NewSession {
+    pub user_id: uuid::Uuid,
+    pub start_time: DateTime<Utc>,
+    pub end_time: Option<DateTime<Utc>>,
+    pub goal_seconds: i64,
+}
+
+impl NewSession {
+    pub fn new(user_id: uuid::Uuid, goal_seconds: i64) -> Self {
+        Self {
+            user_id,
+            start_time: Utc::now(),
+            end_time: None,
+            goal_seconds,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CreateFocusSessionSchema {
+    pub goal_seconds: i64,
 }
