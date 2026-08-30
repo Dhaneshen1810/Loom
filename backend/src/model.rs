@@ -15,6 +15,7 @@ pub struct User {
     pub name: String,
     pub email: String,
     pub password_hash: String,
+    pub coins: i64,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updatedAt")]

@@ -1,0 +1,3 @@
+ALTER TABLE users
+ADD COLUMN coins BIGINT NOT NULL DEFAULT 0
+CHECK (coins >= 0);
