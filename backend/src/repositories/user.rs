@@ -3,6 +3,17 @@ use uuid::Uuid;
 
 use crate::model::{NewUser, User};
 
+pub async fn find_user_by_id(pool: &PgPool, id: Uuid) -> Result<Option<User>, sqlx::Error> {
+    sqlx::query_as::<_, User>(
+        "SELECT *
+         FROM users
+         WHERE id = $1",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+}
+
 pub async fn find_user_by_email(pool: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as::<_, User>(
         "SELECT id, name, email, password_hash, coins, created_at, updated_at

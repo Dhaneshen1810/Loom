@@ -83,3 +83,50 @@ impl NewSession {
 pub struct CreateFocusSessionSchema {
     pub goal_seconds: i64,
 }
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::Type)]
+#[sqlx(type_name = "text", rename_all = "lowercase")]
+pub enum WorldItemCategory {
+    Tree,
+    Building,
+    Decoration,
+    Road,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct WorldItem {
+    pub id: uuid::Uuid,
+    pub name: String,
+    pub description: String,
+    pub price: i64,
+    pub category: WorldItemCategory,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct NewWorldItem {
+    pub name: String,
+    pub description: String,
+    pub price: i64,
+    pub category: WorldItemCategory,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PurchaseWorldItemSchema {
+    pub tile: u8,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct UserWorldItem {
+    pub id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
+    pub world_item_id: uuid::Uuid,
+    pub tile: i16,
+    pub purchased_at: DateTime<Utc>,
+}
+
+pub struct NewUserWorldItem {
+    pub world_item_id: uuid::Uuid,
+    pub tile: i16,
+}

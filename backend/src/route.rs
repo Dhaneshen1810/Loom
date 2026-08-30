@@ -1,9 +1,11 @@
+use crate::handlers::world_item::get_world_items_handler;
 use crate::handlers::{
     auth::{login_handler, register_user_handler},
     focus_session::{
         end_focus_session_handler, get_focus_sessions_handler, start_focus_session_handler,
     },
     health_checker::health_checker_handler,
+    world_item::world_item_purchase_handler,
 };
 use crate::middleware::auth::require_auth;
 use axum::middleware;
@@ -42,6 +44,20 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
                 require_auth,
             )),
         )
+        .route(
+            "/api/world_items",
+            get(get_world_items_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
+        )
+        .route(
+            "/api/world_items/{world_item_id}/purchase",
+            post(world_item_purchase_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
+        )
         // .route(
         //     "/api/auth/logout",
         //     get(logout_handler)
@@ -54,3 +70,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         // )
         .with_state(app_state)
 }
+
+// Add api to create new item
+// User purchases item
+// Add to user inventory
