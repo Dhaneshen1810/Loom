@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import styles from "@/components/pomodoro/pomodoro.module.css";
 
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
@@ -22,7 +22,7 @@ export function LogoutButton() {
 
   return (
     <button
-      className={styles.logoutButton}
+      className={className ?? styles.logoutButton}
       type="button"
       onClick={logOut}
       disabled={isPending}

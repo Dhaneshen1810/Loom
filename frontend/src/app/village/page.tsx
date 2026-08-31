@@ -24,28 +24,33 @@ export default async function VillagePage() {
 
   return (
     <main className={styles.scene}>
-      <header className={styles.titleSign}>
-        <i aria-hidden="true" />
-        <div>
-          <p>Loom Valley</p>
-          <h1>Your Village</h1>
-        </div>
-        <i aria-hidden="true" />
-      </header>
+      <div className={styles.atmosphere} aria-hidden="true" />
 
-      <nav className={styles.navigation} aria-label="Main navigation">
-        <Link href="/">
-          <span className={styles.timerIcon} aria-hidden="true" />
-          Timer
-        </Link>
-        <Link className={styles.activeNav} href="/village" aria-current="page">
-          <span className={styles.villageIcon} aria-hidden="true" />
-          Village
-        </Link>
+      <div className={styles.chrome}>
+        <nav className={styles.navigation} aria-label="Main navigation">
+          <Link href="/">
+            <span className={styles.timerIcon} aria-hidden="true" />
+            Timer
+          </Link>
+          <Link className={styles.activeNav} href="/village" aria-current="page">
+            <span className={styles.villageIcon} aria-hidden="true" />
+            Village
+          </Link>
+        </nav>
+
+        <header className={styles.titleSign}>
+          <i aria-hidden="true" />
+          <div>
+            <p>Loom Valley</p>
+            <h1>Your Village</h1>
+          </div>
+          <i aria-hidden="true" />
+        </header>
+
         <div className={styles.logoutWrap}>
-          <LogoutButton />
+          <LogoutButton className={styles.logoutButton} />
         </div>
-      </nav>
+      </div>
 
       <section className={styles.villageStage} aria-labelledby="village-heading">
         <h2 id="village-heading" className={styles.visuallyHidden}>

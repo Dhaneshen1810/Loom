@@ -1,52 +1,79 @@
 .scene {
   position: relative;
+  display: grid;
+  height: 100dvh;
   min-height: 100svh;
-  overflow: hidden auto;
-  padding: 1.6rem clamp(1rem, 4vw, 3rem) 2.2rem;
-  background: #1b3022;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  overflow: hidden;
+  padding: 0.8rem clamp(0.7rem, 2.6vw, 1.8rem) 0.9rem;
+  padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
+  background: #1e3328;
+}
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(198, 229, 106, 0.12), transparent 26%),
+    radial-gradient(circle at 86% 18%, rgba(90, 140, 72, 0.22), transparent 32%),
+    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.28), transparent 48%),
+    linear-gradient(180deg, #2a4634 0%, #1e3328 42%, #16251e 100%);
+}
+
+.chrome {
+  display: grid;
+  width: min(100%, 92rem);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem 1rem;
+  margin-inline: auto;
 }
 
 .titleSign {
-  position: relative;
-  z-index: 4;
   display: flex;
-  width: min(88vw, 22rem);
-  min-height: 4rem;
+  min-width: 0;
+  min-height: 3.35rem;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
-  margin-inline: auto;
-  padding: 0.5rem 2rem;
-  border: 0.28rem solid #4d2b1d;
+  gap: 0.7rem;
+  justify-self: center;
+  padding: 0.3rem 1.3rem;
+  border: 0.22rem solid #4d2b1d;
   border-radius: 0.3rem;
-  outline: 0.16rem solid #aa642e;
+  outline: 0.12rem solid #aa642e;
   color: #fff0bd;
-  background: repeating-linear-gradient(0deg, #865029 0 1.15rem, #96592c 1.15rem 2.3rem);
-  box-shadow: 0 0.45rem 0 rgba(7, 27, 23, 0.35);
+  background: repeating-linear-gradient(0deg, #865029 0 1.05rem, #96592c 1.05rem 2.1rem);
+  box-shadow: 0 0.32rem 0 rgba(7, 27, 23, 0.35);
   text-align: center;
 }
 
 .titleSign p {
   color: #e5bd73;
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 0.8;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 .titleSign h1 {
-  font-size: clamp(2.1rem, 7vw, 2.7rem);
+  overflow: hidden;
+  font-size: clamp(1.55rem, 4.6vw, 2.25rem);
   font-weight: 400;
   line-height: 0.82;
   letter-spacing: 0.05em;
+  text-overflow: ellipsis;
   text-shadow: 3px 3px #4b2b1d;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .titleSign > i {
-  width: 1.2rem;
-  height: 1.7rem;
-  border: 0.16rem solid #274d29;
+  width: 1rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  border: 0.14rem solid #274d29;
   border-radius: 90% 10% 80% 20%;
   background: #609943;
   rotate: -25deg;
@@ -57,30 +84,29 @@
 }
 
 .navigation {
-  position: absolute;
-  z-index: 8;
-  top: 1.6rem;
-  left: clamp(1rem, 4vw, 3rem);
-  display: grid;
-  width: 9.5rem;
-  border: 0.25rem solid #4d2c1e;
-  border-radius: 0.25rem;
-  outline: 0.14rem solid #a96732;
+  display: flex;
   overflow: hidden;
+  border: 0.2rem solid #4d2c1e;
+  border-radius: 0.28rem;
+  outline: 0.1rem solid #a96732;
   background: #b87c3d;
-  box-shadow: 0 0.4rem 0 rgba(4, 25, 21, 0.35);
+  box-shadow: 0 0.28rem 0 rgba(4, 25, 21, 0.35);
 }
 
 .navigation > a {
   display: flex;
-  min-height: 3.25rem;
+  min-height: 2.6rem;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.55rem 0.8rem;
-  border-bottom: 0.14rem solid #754326;
+  gap: 0.5rem;
+  padding: 0.32rem 0.75rem;
+  border-right: 0.12rem solid #754326;
   color: #4c2b1d;
   background: #c68c48;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+}
+
+.navigation > a:last-child {
+  border-right: 0;
 }
 
 .navigation > a:hover {
@@ -90,24 +116,24 @@
 .navigation > a:focus-visible {
   position: relative;
   outline: 0.18rem solid #fff0ae;
-  outline-offset: -0.28rem;
+  outline-offset: -0.22rem;
 }
 
 .navigation .activeNav {
   background: #f2cb82;
-  box-shadow: inset 0.18rem 0.18rem #ffe9ae;
+  box-shadow: inset 0.14rem 0.14rem #ffe9ae;
 }
 
 .timerIcon,
 .villageIcon {
   position: relative;
   display: inline-block;
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .timerIcon {
-  border: 0.16rem solid #573521;
+  border: 0.14rem solid #573521;
   border-radius: 50%;
   background: #fff0b1;
 }
@@ -117,8 +143,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 0.11rem;
-  height: 0.4rem;
+  width: 0.1rem;
+  height: 0.36rem;
   background: #573521;
   content: "";
   transform-origin: top;
@@ -133,29 +159,58 @@
 }
 
 .villageIcon {
-  border: 0.15rem solid #563520;
+  border: 0.14rem solid #563520;
   background: #dfa95d;
   clip-path: polygon(50% 0, 100% 35%, 100% 100%, 0 100%, 0 35%);
 }
 
 .villageIcon::after {
   position: absolute;
-  right: 0.36rem;
+  right: 0.3rem;
   bottom: 0;
-  width: 0.38rem;
-  height: 0.62rem;
+  width: 0.32rem;
+  height: 0.52rem;
   background: #754329;
   content: "";
 }
 
 .logoutWrap {
-  padding: 0.6rem;
-  background: #a96d36;
+  justify-self: end;
+}
+
+.logoutButton {
+  min-height: 2.6rem;
+  padding: 0.35rem 0.9rem;
+  border: 0.16rem solid #4d2c1e;
+  border-radius: 0.28rem;
+  color: #4c2b1d;
+  background: #edc276;
+  box-shadow: 0 0.22rem 0 #694023;
+  cursor: pointer;
+  font-size: 1.12rem;
+  white-space: nowrap;
+}
+
+.logoutButton:hover:not(:disabled) {
+  background: #ffdda0;
+}
+
+.logoutButton:focus-visible {
+  outline: 0.18rem solid #fff2bd;
+  outline-offset: 0.12rem;
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .villageStage {
-  width: min(100%, 72rem);
-  margin: 1.4rem auto 0;
+  display: grid;
+  width: min(100%, 92rem);
+  min-width: 0;
+  min-height: 0;
+  margin-inline: auto;
 }
 
 .visuallyHidden {
@@ -168,38 +223,74 @@
 }
 
 @media (max-width: 880px) {
-  .scene {
-    padding-top: 1.2rem;
+  .chrome {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title logout"
+      "nav nav";
+    gap: 0.55rem;
   }
 
-  .navigation {
-    position: relative;
-    top: auto;
-    left: auto;
-    display: flex;
-    width: min(92vw, 23rem);
-    margin: 1.1rem auto 0;
-  }
-
-  .navigation > a {
-    min-height: 2.8rem;
-    flex: 1;
-    justify-content: center;
-    border-right: 0.14rem solid #754326;
-    border-bottom: 0;
+  .titleSign {
+    grid-area: title;
+    justify-self: start;
+    width: min(100%, 20rem);
+    padding-inline: 0.75rem;
   }
 
   .logoutWrap {
-    margin-left: auto;
+    grid-area: logout;
   }
 
-  .villageStage {
-    margin-top: 1rem;
+  .navigation {
+    grid-area: nav;
+    width: 100%;
+  }
+
+  .navigation > a {
+    flex: 1;
+    justify-content: center;
   }
 }
 
 @media (max-width: 520px) {
   .scene {
-    padding-inline: 0.65rem;
+    padding-inline: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .titleSign h1 {
+    font-size: 1.45rem;
+  }
+
+  .titleSign > i {
+    display: none;
+  }
+
+  .navigation > a {
+    min-height: 2.4rem;
+    font-size: 1.08rem;
+  }
+
+  .logoutButton {
+    min-height: 2.4rem;
+    padding-inline: 0.7rem;
+    font-size: 1.02rem;
+  }
+}
+
+@media (max-height: 700px) {
+  .scene {
+    padding-top: 0.45rem;
+    padding-bottom: 0.5rem;
+    gap: 0.45rem;
+  }
+
+  .titleSign {
+    min-height: 2.6rem;
+  }
+
+  .titleSign p {
+    display: none;
   }
 }
