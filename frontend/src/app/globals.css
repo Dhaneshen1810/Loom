@@ -1,0 +1,54 @@
+:root {
+  --ink: #3c2417;
+  --cream: #ffe4a7;
+  --cream-light: #fff1c9;
+  --wood-dark: #4a2418;
+  --leaf: #527d2b;
+  --leaf-dark: #2f571f;
+}
+
+html {
+  height: 100%;
+  background: #78c9f2;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  color: var(--ink);
+  background: #78c9f2;
+  font-family: "VT323", ui-monospace, monospace;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #fff7dd;
+  background: #557d2c;
+}
