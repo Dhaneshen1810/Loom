@@ -1,6 +1,7 @@
 "use client";
 
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 
@@ -361,6 +362,10 @@ export function PomodoroTimer() {
           <span className={styles.timerIcon} aria-hidden="true" />
           Timer
         </button>
+        <Link href="/village">
+          <span className={styles.villageIcon} aria-hidden="true" />
+          Village
+        </Link>
         <button type="button" disabled>
           <span className={styles.statsIcon} aria-hidden="true" />
           Stats

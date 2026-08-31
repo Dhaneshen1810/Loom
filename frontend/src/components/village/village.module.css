@@ -1,0 +1,155 @@
+.stage {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.canvasFrame {
+  position: relative;
+  height: clamp(28rem, 68vh, 42rem);
+  overflow: hidden;
+  border-radius: 0.2rem;
+  background: #1b3022;
+  box-shadow: 0 1.1rem 2.4rem rgba(4, 16, 12, 0.38);
+  touch-action: none;
+}
+
+.canvasFrame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.dragHint {
+  position: absolute;
+  bottom: 0.85rem;
+  left: 1rem;
+  color: rgba(214, 232, 196, 0.42);
+  font-size: 1.05rem;
+  pointer-events: none;
+}
+
+.counters {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.85rem;
+  display: flex;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #f4f0e0;
+  font-size: 1.45rem;
+  text-shadow: 0 2px 0 rgba(12, 28, 20, 0.55);
+}
+
+.coinIcon,
+.sproutIcon,
+.plotIcon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.coinIcon {
+  border: 0.14rem solid #8d5c22;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, #fff1a3 0 14%, #eeb943 16% 62%, #c68926 64%);
+}
+
+.sproutIcon {
+  border: 0.12rem solid rgba(244, 240, 224, 0.55);
+  border-radius: 50%;
+  background:
+    linear-gradient(#f4f0e0, #f4f0e0) 50% 72% / 0.16rem 0.38rem no-repeat,
+    radial-gradient(circle at 32% 38%, #f4f0e0 0 0.16rem, transparent 0.17rem),
+    radial-gradient(circle at 68% 34%, #f4f0e0 0 0.16rem, transparent 0.17rem);
+}
+
+.plotIcon {
+  border: 0.12rem solid rgba(244, 240, 224, 0.55);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 38%, #f4f0e0 0 0.18rem, transparent 0.19rem),
+    linear-gradient(#f4f0e0, #f4f0e0) 50% 72% / 0.18rem 0.42rem no-repeat;
+}
+
+.loading {
+  display: grid;
+  height: clamp(28rem, 68vh, 42rem);
+  place-items: center;
+  gap: 0.75rem;
+  border-radius: 0.2rem;
+  color: #b7d0a6;
+  background: #1b3022;
+  font-size: 1.2rem;
+}
+
+.loading span {
+  width: 4.2rem;
+  height: 2.4rem;
+  border: 0.16rem solid #4f8438;
+  background: linear-gradient(#98d45c 0 28%, #6b4a2c 28%);
+  clip-path: polygon(50% 0, 100% 38%, 100% 100%, 0 100%, 0 38%);
+}
+
+.readout {
+  min-height: 3.1rem;
+  padding: 0.55rem 0.95rem;
+  border: 0.14rem solid rgba(111, 154, 92, 0.35);
+  border-radius: 0.28rem;
+  background: rgba(16, 38, 30, 0.55);
+}
+
+.readout p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: #b7d0a6;
+  font-size: 1.2rem;
+}
+
+.readout strong {
+  color: #ffe693;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.tileList {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.tileList button:focus-visible {
+  position: fixed;
+  z-index: 40;
+  top: 1rem;
+  left: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 0.8rem;
+  border: 0.16rem solid #2c4a24;
+  border-radius: 0.25rem;
+  color: #fff3c4;
+  background: #4d7a2f;
+  clip-path: none;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 720px) {
+  .canvasFrame,
+  .loading {
+    height: clamp(22rem, 62vh, 32rem);
+  }
+
+  .counters {
+    gap: 0.65rem;
+  }
+}

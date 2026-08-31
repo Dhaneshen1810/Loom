@@ -348,7 +348,8 @@
   transform: translateY(-42%);
 }
 
-.sidebar > button {
+.sidebar > button,
+.sidebar > a {
   display: flex;
   min-height: 3.55rem;
   align-items: center;
@@ -366,6 +367,17 @@
   opacity: 0.68;
 }
 
+.sidebar > a:hover {
+  background: #dda95f;
+}
+
+.sidebar > a:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 0.18rem solid #fff0af;
+  outline-offset: -0.28rem;
+}
+
 .sidebar .activeNav {
   color: #623120;
   background: #f5cf87;
@@ -373,6 +385,7 @@
 }
 
 .timerIcon,
+.villageIcon,
 .statsIcon,
 .historyIcon {
   position: relative;
@@ -380,6 +393,22 @@
   flex: 0 0 auto;
   width: 1.35rem;
   height: 1.35rem;
+}
+
+.villageIcon {
+  border: 0.16rem solid #563520;
+  background: #dfaf62;
+  clip-path: polygon(50% 0, 100% 35%, 100% 100%, 0 100%, 0 35%);
+}
+
+.villageIcon::after {
+  position: absolute;
+  right: 0.38rem;
+  bottom: 0;
+  width: 0.4rem;
+  height: 0.65rem;
+  background: #754329;
+  content: "";
 }
 
 .timerIcon {
@@ -796,7 +825,8 @@
     transform: none;
   }
 
-  .sidebar > button {
+  .sidebar > button,
+  .sidebar > a {
     min-height: 2.9rem;
     flex: 1;
     justify-content: center;

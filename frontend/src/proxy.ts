@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isTokenActive, SESSION_COOKIE } from "@/lib/auth";
 
 const AUTH_PAGES = new Set(["/login", "/register"]);
+const PROTECTED_PAGES = new Set(["/", "/village"]);
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -13,7 +14,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  if (pathname === "/" && !hasSession) {
+  if (PROTECTED_PAGES.has(pathname) && !hasSession) {
     const response = NextResponse.redirect(new URL("/login", request.url));
 
     if (token) {
@@ -27,5 +28,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/register"],
+  matcher: ["/", "/login", "/register", "/village"],
 };
