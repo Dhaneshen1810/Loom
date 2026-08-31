@@ -7,28 +7,23 @@ use crate::{
     model::{Claims, PurchaseWorldItemSchema},
     repositories::{
         user_world_item::{PurchaseWorldItemOutcome, purchase_world_item},
-        world_item::{find_all_world_items, find_world_item_by_id},
+        world_item::find_all_world_items,
     },
 };
 
-pub async fn get_world_items_handler(State(data): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_world_items_handler(
+    State(data): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, AppError> {
     // Fetch and return all focus sessions
     let fetched_world_items = find_all_world_items(&data.db).await;
 
     match fetched_world_items {
         Ok(world_items) => {
-            return Json(serde_json::json!({
-                "status": "success",
-                "message": "World items found.",
-                "sessions": world_items,
-            }));
+            return Ok(AppSuccess::with_data("World items found.", world_items));
         }
         Err(error) => {
             eprint!("Error: {}", error);
-            return Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to fetch world items."
-            }));
+            return Err(AppError::NotFound("World items not found".into()));
         }
     }
 }

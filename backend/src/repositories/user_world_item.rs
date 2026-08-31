@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::model::{NewUserWorldItem, UserWorldItem};
+use crate::model::UserWorldItem;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum PurchaseWorldItemOutcome {
@@ -29,19 +29,6 @@ pub async fn find_user_world_items_by_user_id(
     )
     .bind(user_id)
     .fetch_all(pool)
-    .await
-}
-
-pub async fn create_user_world_item(
-    pool: &PgPool,
-    user_id: Uuid,
-    new_user_world_item: &NewUserWorldItem,
-) -> Result<UserWorldItem, sqlx::Error> {
-    sqlx::query_as::<_, UserWorldItem>("INSERT INTO user_world_items (user_id, world_item_id, tile) VALUES ($1, $2, $3) RETURNING *")
-        .bind(user_id)
-        .bind(&new_user_world_item.world_item_id)
-        .bind(&new_user_world_item.tile)
-    .fetch_one(pool)
     .await
 }
 

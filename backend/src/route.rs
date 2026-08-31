@@ -1,3 +1,4 @@
+use crate::handlers::user_world_items::get_user_world_items_handler;
 use crate::handlers::world_item::get_world_items_handler;
 use crate::handlers::{
     auth::{login_handler, register_user_handler},
@@ -75,19 +76,12 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
                 require_auth,
             )),
         )
-        // .route(
-        //     "/api/auth/logout",
-        //     get(logout_handler)
-        //         .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
-        // )
-        // .route(
-        //     "/api/users/me",
-        //     get(get_me_handler)
-        //         .route_layer(middleware::from_fn_with_state(app_state.clone(), auth)),
-        // )
+        .route(
+            "/api/user_world_items/me",
+            get(get_user_world_items_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
+        )
         .with_state(app_state)
 }
-
-// Add api to create new item
-// User purchases item
-// Add to user inventory

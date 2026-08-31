@@ -1,15 +1,9 @@
-use axum::{Extension, Json, extract::Path, extract::State, response::IntoResponse};
-use chrono::{DateTime, Utc};
+use axum::{Extension, extract::State, response::IntoResponse};
 use std::sync::Arc;
-use uuid::Uuid;
 
 use crate::{
-    AppError, AppState, AppSuccess,
-    model::Claims,
-    repositories::{
-        user,
-        user_world_item::{self, find_user_world_items_by_user_id},
-    },
+    AppError, AppState, AppSuccess, model::Claims,
+    repositories::user_world_item::find_user_world_items_by_user_id,
 };
 
 pub async fn get_user_world_items_handler(

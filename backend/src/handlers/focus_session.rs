@@ -4,36 +4,33 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::{
-    AppState,
-    handlers::focus_session,
+    AppError, AppState, AppSuccess,
     model::{Claims, CreateFocusSessionSchema, FocusSession, NewSession},
     repositories::{
         focus_session::{
             create_focus_session, find_all_focus_sessions, find_focus_session_by_id,
             update_focus_session,
         },
-        user::{self, update_user_coins},
+        user::update_user_coins,
     },
 };
 
-pub async fn get_focus_sessions_handler(State(data): State<Arc<AppState>>) -> impl IntoResponse {
+pub async fn get_focus_sessions_handler(
+    State(data): State<Arc<AppState>>,
+) -> Result<impl IntoResponse, AppError> {
     // Fetch and return all focus sessions
     let fetched_focus_sessions = find_all_focus_sessions(&data.db).await;
 
     match fetched_focus_sessions {
         Ok(focus_sessions) => {
-            return Json(serde_json::json!({
-                "status": "success",
-                "message": "Focus sessions found.",
-                "sessions": focus_sessions,
-            }));
+            return Ok(AppSuccess::with_data(
+                "Focus sessions found.",
+                focus_sessions,
+            ));
         }
         Err(error) => {
             eprint!("Error: {}", error);
-            return Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to fetch focus sessions."
-            }));
+            return Err(AppError::NotFound("Failed to fetch focus sessions.".into()));
         }
     }
 }
@@ -68,7 +65,7 @@ pub async fn end_focus_session_handler(
     Path(id): Path<Uuid>,
     Extension(claims): Extension<Claims>,
     State(data): State<Arc<AppState>>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
     let user_id = claims.sub;
     // Get session by id
     let fetched_session = find_focus_session_by_id(&data.db, id).await;
@@ -77,24 +74,15 @@ pub async fn end_focus_session_handler(
     let mut session = match fetched_session {
         Ok(Some(session)) => session,
         Ok(None) => {
-            return Json(serde_json::json!({
-                "status": "error",
-                "message": "Session not found"
-            }));
+            return Err(AppError::NotFound("Session not found".into()));
         }
         Err(_) => {
-            return Json(serde_json::json!({
-                "status": "error",
-                "message": "Failed to fetch session"
-            }));
+            return Err(AppError::NotFound("Failed to fetch session".into()));
         }
     };
 
-    if &session.user_id != &user_id {
-        return Json(serde_json::json!({
-            "status": "error",
-            "message": "Session not found"
-        }));
+    if session.user_id != user_id {
+        return Err(AppError::NotFound("Session not found".into()));
     }
 
     session.set_end_time(Utc::now());
@@ -104,31 +92,20 @@ pub async fn end_focus_session_handler(
             // Update user coins
             let reward_coins = calculate_coins_reward(&session);
             match update_user_coins(&data.db, session.user_id, reward_coins).await {
-                Ok(user) => {
-                    return Json(serde_json::json!({
-                        "status": "success",
-                        "message": "Session has ended.",
+                Ok(user) => Ok(AppSuccess::with_data(
+                    "Session has ended.",
+                    serde_json::json!({
                         "reward_coins": reward_coins,
                         "user": {
                             "coins": user.coins
                         }
-                    }));
-                }
-                Err(_) => {
-                    return Json(serde_json::json!({
-                        "status": "error",
-                        "message": "Session not found"
-                    }));
-                }
-            };
+                    }),
+                )),
+                Err(_) => Err(AppError::NotFound("Session not found".into())),
+            }
         }
-        Err(_) => {
-            return Json(serde_json::json!({
-                "status": "error",
-                "message": "Session not found"
-            }));
-        }
-    };
+        Err(_) => Err(AppError::NotFound("Session not found".into())),
+    }
 }
 
 pub fn calculate_coins_reward(focus_session: &FocusSession) -> i64 {

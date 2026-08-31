@@ -125,8 +125,3 @@ pub struct UserWorldItem {
     pub tile: i16,
     pub purchased_at: DateTime<Utc>,
 }
-
-pub struct NewUserWorldItem {
-    pub world_item_id: uuid::Uuid,
-    pub tile: i16,
-}

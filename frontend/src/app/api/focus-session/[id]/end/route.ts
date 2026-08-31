@@ -10,6 +10,12 @@ type EndResponse = {
   user?: {
     coins?: number;
   };
+  data?: {
+    reward_coins?: number;
+    user?: {
+      coins?: number;
+    };
+  };
 };
 
 export async function POST(
@@ -51,8 +57,8 @@ export async function POST(
     return NextResponse.json({
       status: "success",
       message: payload.message,
-      coins: payload.user?.coins,
-      coinsAwarded: payload.reward_coins,
+      coins: payload.data?.user?.coins ?? payload.user?.coins,
+      coinsAwarded: payload.data?.reward_coins ?? payload.reward_coins,
     });
   } catch {
     return NextResponse.json(

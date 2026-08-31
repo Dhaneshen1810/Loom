@@ -1,12 +1,9 @@
-use axum::{Json, response::IntoResponse};
+use axum::response::IntoResponse;
 
-pub async fn health_checker_handler() -> impl IntoResponse {
+use crate::{AppError, AppSuccess};
+
+pub async fn health_checker_handler() -> Result<impl IntoResponse, AppError> {
     const MESSAGE: &str = "Server is up and running!!";
 
-    let json_response = serde_json::json!({
-        "status": "success",
-        "message": MESSAGE
-    });
-
-    Json(json_response)
+    Ok(AppSuccess::response(MESSAGE))
 }
