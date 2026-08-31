@@ -1,6 +1,10 @@
-use crate::{AppState, model::Claims};
+use crate::{
+    AppError, AppState,
+    model::{Claims, UserRole},
+    repositories::user::find_user_by_id,
+};
 use axum::{
-    Json,
+    Extension, Json,
     extract::{Request, State},
     http::{StatusCode, header::AUTHORIZATION},
     middleware::Next,
@@ -38,6 +42,31 @@ pub async fn require_auth(
 
     request.extensions_mut().insert(token_data.claims);
     next.run(request).await
+}
+
+pub async fn require_admin(
+    State(data): State<Arc<AppState>>,
+    Extension(claims): Extension<Claims>,
+    request: Request,
+    next: Next,
+) -> Response {
+    match find_user_by_id(&data.db, claims.sub).await {
+        Ok(Some(user)) if user.role == UserRole::Admin => next.run(request).await,
+        Ok(Some(_)) => forbidden("Admin access required"),
+        Ok(None) => unauthorized("User not found"),
+        Err(error) => AppError::Database(error).into_response(),
+    }
+}
+
+fn forbidden(message: &str) -> Response {
+    (
+        StatusCode::FORBIDDEN,
+        Json(serde_json::json!({
+            "status": "error",
+            "message": message
+        })),
+    )
+        .into_response()
 }
 
 fn unauthorized(message: &str) -> Response {

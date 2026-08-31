@@ -16,12 +16,22 @@ pub async fn find_user_by_id(pool: &PgPool, id: Uuid) -> Result<Option<User>, sq
 
 pub async fn find_user_by_email(pool: &PgPool, email: &str) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as::<_, User>(
-        "SELECT id, name, email, password_hash, coins, created_at, updated_at
+        "SELECT id, name, email, password_hash, coins, role, created_at, updated_at
          FROM users
          WHERE email = $1",
     )
     .bind(email)
     .fetch_optional(pool)
+    .await
+}
+
+pub async fn find_all_users(pool: &PgPool) -> Result<Vec<User>, sqlx::Error> {
+    sqlx::query_as::<_, User>(
+        "SELECT *
+         FROM users
+         ORDER BY created_at DESC",
+    )
+    .fetch_all(pool)
     .await
 }
 
@@ -45,7 +55,7 @@ pub async fn update_user_coins(
         "UPDATE users
          SET coins = coins + $1, updated_at = NOW()
          WHERE id = $2
-         RETURNING id, name, email, password_hash, coins, created_at, updated_at",
+         RETURNING id, name, email, password_hash, coins, role, created_at, updated_at",
     )
     .bind(coins_to_add)
     .bind(user_id)

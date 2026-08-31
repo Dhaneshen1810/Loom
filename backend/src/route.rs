@@ -6,10 +6,10 @@ use crate::handlers::{
         end_focus_session_handler, get_focus_sessions_handler, start_focus_session_handler,
     },
     health_checker::health_checker_handler,
-    user::get_current_user_handler,
+    user::{get_all_users_handler, get_current_user_handler},
     world_item::world_item_purchase_handler,
 };
-use crate::middleware::auth::require_auth;
+use crate::middleware::auth::{require_admin, require_auth};
 use axum::middleware;
 use std::sync::Arc;
 
@@ -56,17 +56,27 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         // World items
         .route(
             "/api/world_items",
-            get(get_world_items_handler).layer(middleware::from_fn_with_state(
-                app_state.clone(),
-                require_auth,
-            )),
+            get(get_world_items_handler)
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_admin,
+                ))
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_auth,
+                )),
         )
         .route(
             "/api/world_items",
-            post(world_item_purchase_handler).layer(middleware::from_fn_with_state(
-                app_state.clone(),
-                require_auth,
-            )),
+            post(world_item_purchase_handler)
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_admin,
+                ))
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_auth,
+                )),
         )
         // User world items
         .route(
@@ -82,6 +92,18 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
                 app_state.clone(),
                 require_auth,
             )),
+        )
+        .route(
+            "/api/users",
+            get(get_all_users_handler)
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_admin,
+                ))
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    require_auth,
+                )),
         )
         .with_state(app_state)
 }

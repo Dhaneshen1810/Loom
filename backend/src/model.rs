@@ -1,8 +1,15 @@
 use chrono::prelude::*;
 use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::Type, PartialEq)]
+#[sqlx(type_name = "text", rename_all = "lowercase")]
+pub enum UserRole {
+    User,
+    Admin,
+}
+
 #[allow(non_snake_case)]
 #[derive(Debug, Deserialize, sqlx::FromRow, Serialize, Clone)]
-
 pub struct NewUser {
     pub name: String,
     pub email: String,
@@ -16,6 +23,7 @@ pub struct User {
     pub email: String,
     pub password_hash: String,
     pub coins: i64,
+    pub role: UserRole,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Utc>>,
     #[serde(rename = "updatedAt")]
