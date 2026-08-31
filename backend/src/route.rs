@@ -5,6 +5,7 @@ use crate::handlers::{
         end_focus_session_handler, get_focus_sessions_handler, start_focus_session_handler,
     },
     health_checker::health_checker_handler,
+    user::get_current_user_handler,
     world_item::world_item_purchase_handler,
 };
 use crate::middleware::auth::require_auth;
@@ -45,12 +46,28 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
             )),
         )
         .route(
+            "/api/users/me",
+            get(get_current_user_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
+        )
+        // World items
+        .route(
             "/api/world_items",
             get(get_world_items_handler).layer(middleware::from_fn_with_state(
                 app_state.clone(),
                 require_auth,
             )),
         )
+        .route(
+            "/api/world_items",
+            post(world_item_purchase_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
+        )
+        // User world items
         .route(
             "/api/world_items/{world_item_id}/purchase",
             post(world_item_purchase_handler).layer(middleware::from_fn_with_state(

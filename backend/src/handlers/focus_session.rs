@@ -108,7 +108,10 @@ pub async fn end_focus_session_handler(
                     return Json(serde_json::json!({
                         "status": "success",
                         "message": "Session has ended.",
-                        "user": user
+                        "reward_coins": reward_coins,
+                        "user": {
+                            "coins": user.coins
+                        }
                     }));
                 }
                 Err(_) => {
