@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import styles from "@/app/home.module.css";
+import styles from "@/components/pomodoro/pomodoro.module.css";
 
 export function LogoutButton() {
   const router = useRouter();
