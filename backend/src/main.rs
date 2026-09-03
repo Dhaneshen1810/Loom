@@ -6,17 +6,16 @@ mod repositories;
 mod route;
 
 use axum::{
-    Json, Router,
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post, put},
 };
 use config::Config;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Pool, Postgres, postgres::PgPoolOptions};
+use std::sync::Arc;
 use std::{env, error::Error};
-use std::{io::ErrorKind::NotFound, sync::Arc};
 
 use crate::route::create_router;
 
@@ -54,23 +53,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-async fn hello_world(State(pool): State<PgPool>) -> Result<&'static str, StatusCode> {
-    sqlx::query("SELECT 1")
-        .execute(&pool)
-        .await
-        .map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?;
-
-    Ok("hello world")
-}
-
-async fn hello_name(Json(payload): Json<NamePayload>) -> String {
-    format!("hello {}", payload.name)
-}
-
-async fn update_name(Path(name): Path<String>) -> String {
-    format!("will update {name}")
 }
 
 pub struct AppSuccess;

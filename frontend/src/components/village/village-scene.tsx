@@ -2,8 +2,10 @@
 
 import { ContactShadows, OrbitControls, OrthographicCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PCFShadowMap, ACESFilmicToneMapping } from "three";
+
+import type { PlacedWorldItem } from "@/lib/world-items";
 
 import {
   GRID_SIZE,
@@ -11,6 +13,7 @@ import {
   tileLabel,
   VillageIsland,
 } from "./village-island";
+import { treeArticle } from "./village-tree";
 import styles from "./village.module.css";
 
 function prefersReducedMotion() {
@@ -26,19 +29,43 @@ function cameraZoom(width: number, height: number) {
   return Math.max(22, Math.min(shortest / (tall ? 8.8 : 7.6), 88));
 }
 
-export function VillageScene({ coins }: { coins: number | null }) {
+type VillageSceneProps = {
+  coins: number | null;
+  plantedItems: PlacedWorldItem[];
+};
+
+export function VillageScene({ coins, plantedItems }: VillageSceneProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [hoveredTile, setHoveredTile] = useState<number | null>(null);
   const [selectedTile, setSelectedTile] = useState<number | null>(null);
   const [zoom, setZoom] = useState(48);
-  const [animate, setAnimate] = useState(true);
+  const animate = !prefersReducedMotion();
   const focusedTile = hoveredTile ?? selectedTile;
   const row = focusedTile ? Math.floor((focusedTile - 1) / GRID_SIZE) + 1 : null;
   const column = focusedTile ? ((focusedTile - 1) % GRID_SIZE) + 1 : null;
+  const occupied = useMemo(() => {
+    const map = new Map<number, PlacedWorldItem>();
 
-  useEffect(() => {
-    setAnimate(!prefersReducedMotion());
-  }, []);
+    for (const item of plantedItems) {
+      map.set(item.tile, item);
+    }
+
+    return map;
+  }, [plantedItems]);
+  const focusedItem = focusedTile === null ? null : (occupied.get(focusedTile) ?? null);
+  const trees = useMemo(
+    () =>
+      plantedItems
+        .filter((item) => item.category === "tree")
+        .map((item) => ({
+          tile: item.tile,
+          name: item.name,
+          description: item.description,
+        })),
+    [plantedItems],
+  );
+  const plantedCount = plantedItems.length;
+  const emptyCount = TILE_COUNT - plantedCount;
 
   useEffect(() => {
     const frame = frameRef.current;
@@ -115,6 +142,7 @@ export function VillageScene({ coins }: { coins: number | null }) {
               onHover={setHoveredTile}
               onSelect={setSelectedTile}
               animate={animate}
+              trees={trees}
             />
           </group>
 
@@ -136,7 +164,7 @@ export function VillageScene({ coins }: { coins: number | null }) {
             minZoom={Math.max(20, zoom * 0.7)}
             maxZoom={zoom * 1.5}
             rotateSpeed={0.42}
-            autoRotate={animate}
+            autoRotate={animate && selectedTile === null}
             autoRotateSpeed={0.32}
             minPolarAngle={Math.PI / 4.4}
             maxPolarAngle={Math.PI / 2.65}
@@ -155,13 +183,13 @@ export function VillageScene({ coins }: { coins: number | null }) {
               <i className={styles.coinIcon} aria-hidden="true" />
               {coins === null ? "--" : coins}
             </span>
-            <span className={styles.counter} aria-label="0 planted plots">
+            <span className={styles.counter} aria-label={`${plantedCount} planted plots`}>
               <i className={styles.sproutIcon} aria-hidden="true" />
-              0
+              {plantedCount}
             </span>
-            <span className={styles.counter} aria-label={`${TILE_COUNT} empty plots`}>
+            <span className={styles.counter} aria-label={`${emptyCount} empty plots`}>
               <i className={styles.plotIcon} aria-hidden="true" />
-              {TILE_COUNT}
+              {emptyCount}
             </span>
           </div>
 
@@ -172,16 +200,17 @@ export function VillageScene({ coins }: { coins: number | null }) {
                 const id = index + 1;
                 const planRow = Math.floor(index / GRID_SIZE);
                 const planColumn = index % GRID_SIZE;
+                const occupant = occupied.get(id);
 
                 return (
                   <li key={id}>
                     <button
                       type="button"
                       className={`${(planRow + planColumn) % 2 === 0 ? styles.planLight : styles.planDark} ${
-                        selectedTile === id || hoveredTile === id ? styles.planActive : ""
-                      }`}
+                        occupant ? styles.planPlanted : ""
+                      } ${selectedTile === id || hoveredTile === id ? styles.planActive : ""}`}
                       onClick={() => setSelectedTile(id)}
-                      aria-label={tileLabel(id)}
+                      aria-label={tileLabel(id, occupant?.name.toLowerCase())}
                       aria-pressed={selectedTile === id}
                     />
                   </li>
@@ -191,7 +220,24 @@ export function VillageScene({ coins }: { coins: number | null }) {
           </div>
 
           <div className={styles.readout} role="status" aria-live="polite">
-            {focusedTile === null ? (
+            {focusedItem?.category === "tree" ? (
+              <header className={styles.treePairing}>
+                <p>
+                  This is {treeArticle(focusedItem.name)}{" "}
+                  <em>{focusedItem.name.toLowerCase()}</em>.
+                </p>
+                <span>
+                  Tile {focusedItem.tile} · {focusedItem.description}
+                </span>
+              </header>
+            ) : focusedItem ? (
+              <p>
+                <strong>{focusedItem.name}</strong>
+                <span>
+                  Tile {focusedItem.tile} · row {row}, column {column}
+                </span>
+              </p>
+            ) : focusedTile === null ? (
               <p>Tap a plot to inspect it.</p>
             ) : (
               <p>
@@ -218,7 +264,7 @@ export function VillageScene({ coins }: { coins: number | null }) {
               onFocus={() => setHoveredTile(id)}
               onBlur={() => setHoveredTile(null)}
             >
-              {tileLabel(id)}
+              {tileLabel(id, occupied.get(id)?.name.toLowerCase())}
             </button>
           </li>
         ))}

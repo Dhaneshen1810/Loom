@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::model::UserWorldItem;
+use crate::model::{UserWorldItem, UserWorldItemView};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub enum PurchaseWorldItemOutcome {
@@ -11,6 +11,7 @@ pub enum PurchaseWorldItemOutcome {
         remaining_coins: i64,
     },
     WorldItemNotFound,
+    TileOccupied,
     InsufficientCoins {
         coins_owned: i64,
         world_item_price: i64,
@@ -20,12 +21,21 @@ pub enum PurchaseWorldItemOutcome {
 pub async fn find_user_world_items_by_user_id(
     pool: &PgPool,
     user_id: Uuid,
-) -> Result<Vec<UserWorldItem>, sqlx::Error> {
-    sqlx::query_as::<_, UserWorldItem>(
-        "SELECT id, user_id, world_item_id, tile, purchased_at
+) -> Result<Vec<UserWorldItemView>, sqlx::Error> {
+    sqlx::query_as::<_, UserWorldItemView>(
+        "SELECT user_world_items.id,
+                user_world_items.user_id,
+                user_world_items.world_item_id,
+                user_world_items.tile,
+                user_world_items.purchased_at,
+                world_items.name,
+                world_items.description,
+                world_items.price,
+                world_items.category
          FROM user_world_items
-         WHERE user_id = $1
-         ORDER BY purchased_at DESC",
+         INNER JOIN world_items ON world_items.id = user_world_items.world_item_id
+         WHERE user_world_items.user_id = $1
+         ORDER BY user_world_items.purchased_at DESC",
     )
     .bind(user_id)
     .fetch_all(pool)
@@ -81,7 +91,7 @@ pub async fn purchase_world_item(
     .fetch_one(&mut *transaction)
     .await?;
 
-    let user_world_item = sqlx::query_as::<_, UserWorldItem>(
+    let user_world_item = match sqlx::query_as::<_, UserWorldItem>(
         "INSERT INTO user_world_items (user_id, world_item_id, tile)
          VALUES ($1, $2, $3)
          RETURNING id, user_id, world_item_id, tile, purchased_at",
@@ -90,7 +100,14 @@ pub async fn purchase_world_item(
     .bind(world_item_id)
     .bind(tile)
     .fetch_one(&mut *transaction)
-    .await?;
+    .await
+    {
+        Ok(user_world_item) => user_world_item,
+        Err(error) if is_unique_violation(&error) => {
+            return Ok(PurchaseWorldItemOutcome::TileOccupied);
+        }
+        Err(error) => return Err(error),
+    };
 
     transaction.commit().await?;
 
@@ -98,4 +115,11 @@ pub async fn purchase_world_item(
         user_world_item,
         remaining_coins,
     })
+}
+
+fn is_unique_violation(error: &sqlx::Error) -> bool {
+    error
+        .as_database_error()
+        .and_then(|database_error| database_error.code())
+        .is_some_and(|code| code == "23505")
 }

@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 
+import type { PlacedWorldItem } from "@/lib/world-items";
+
 import styles from "./village.module.css";
 
 const VillageScene = dynamic(
@@ -17,6 +19,11 @@ const VillageScene = dynamic(
   },
 );
 
-export function VillageCanvas({ coins }: { coins: number | null }) {
-  return <VillageScene coins={coins} />;
+type VillageCanvasProps = {
+  coins: number | null;
+  plantedItems: PlacedWorldItem[];
+};
+
+export function VillageCanvas({ coins, plantedItems }: VillageCanvasProps) {
+  return <VillageScene coins={coins} plantedItems={plantedItems} />;
 }

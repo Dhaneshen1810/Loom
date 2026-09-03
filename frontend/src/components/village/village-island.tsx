@@ -9,6 +9,8 @@ import {
   type Mesh,
 } from "three";
 
+import { VillageTree } from "./village-tree";
+
 export const GRID_SIZE = 7;
 export const TILE_COUNT = GRID_SIZE * GRID_SIZE;
 
@@ -58,9 +60,10 @@ export function tileCoordinates(id: number) {
   };
 }
 
-export function tileLabel(id: number) {
+export function tileLabel(id: number, occupant?: string) {
   const { row, column } = tileCoordinates(id);
-  return `Tile ${id}, row ${row + 1}, column ${column + 1}, empty`;
+  const status = occupant ?? "empty";
+  return `Tile ${id}, row ${row + 1}, column ${column + 1}, ${status}`;
 }
 
 function GrassTiles() {
@@ -166,7 +169,7 @@ function TileHitbox({
   );
 }
 
-function GroundDetails() {
+function GroundDetails({ occupiedTiles }: { occupiedTiles: Set<number> }) {
   const details = useMemo(() => {
     const random = createRandom(770077);
     const tufts: { position: [number, number, number]; rotation: number; scale: number }[] = [];
@@ -178,7 +181,7 @@ function GroundDetails() {
     }[] = [];
 
     for (let id = 1; id <= TILE_COUNT; id += 1) {
-      if (id === 1) {
+      if (id === 1 || occupiedTiles.has(id)) {
         continue;
       }
 
@@ -222,7 +225,7 @@ function GroundDetails() {
     }
 
     return { tufts, flowers, pebbles };
-  }, []);
+  }, [occupiedTiles]);
 
   return (
     <group>
@@ -425,12 +428,19 @@ function VillageSign({ animate }: { animate: boolean }) {
   );
 }
 
+export type PlantedTree = {
+  tile: number;
+  name: string;
+  description: string;
+};
+
 type VillageIslandProps = {
   hoveredTile: number | null;
   selectedTile: number | null;
   onHover: (id: number | null) => void;
   onSelect: (id: number) => void;
   animate: boolean;
+  trees: PlantedTree[];
 };
 
 export function VillageIsland({
@@ -439,10 +449,15 @@ export function VillageIsland({
   onHover,
   onSelect,
   animate,
+  trees,
 }: VillageIslandProps) {
   const tiles = useMemo(
     () => Array.from({ length: TILE_COUNT }, (_, index) => index + 1),
     [],
+  );
+  const occupiedTiles = useMemo(
+    () => new Set(trees.map((tree) => tree.tile)),
+    [trees],
   );
 
   return (
@@ -466,8 +481,23 @@ export function VillageIsland({
 
       <GrassTiles />
       <GrassGrid />
-      <GroundDetails />
+      <GroundDetails occupiedTiles={occupiedTiles} />
       <CornerPosts />
+
+      {trees.map((tree) => {
+        const { x, z } = tileCoordinates(tree.tile);
+
+        return (
+          <VillageTree
+            key={`${tree.tile}-${tree.name}`}
+            tileId={tree.tile}
+            name={tree.name}
+            description={tree.description}
+            selected={selectedTile === tree.tile || hoveredTile === tree.tile}
+            position={[x, GRASS_LIP, z]}
+          />
+        );
+      })}
 
       {tiles.map((id) => (
         <TileHitbox
@@ -495,7 +525,7 @@ export function VillageIsland({
       </mesh>
 
       <SoilRocks />
-      <VillageSign animate={animate} />
+      {occupiedTiles.has(1) ? null : <VillageSign animate={animate} />}
     </group>
   );
 }

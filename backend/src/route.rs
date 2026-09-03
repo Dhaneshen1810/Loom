@@ -56,15 +56,10 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         // World items
         .route(
             "/api/world_items",
-            get(get_world_items_handler)
-                .layer(middleware::from_fn_with_state(
-                    app_state.clone(),
-                    require_admin,
-                ))
-                .layer(middleware::from_fn_with_state(
-                    app_state.clone(),
-                    require_auth,
-                )),
+            get(get_world_items_handler).layer(middleware::from_fn_with_state(
+                app_state.clone(),
+                require_auth,
+            )),
         )
         .route(
             "/api/world_items",

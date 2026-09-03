@@ -94,6 +94,7 @@ pub struct CreateFocusSessionSchema {
 
 #[derive(Debug, Deserialize, Serialize, Clone, sqlx::Type)]
 #[sqlx(type_name = "text", rename_all = "lowercase")]
+#[serde(rename_all = "lowercase")]
 pub enum WorldItemCategory {
     Tree,
     Building,
@@ -132,4 +133,17 @@ pub struct UserWorldItem {
     pub world_item_id: uuid::Uuid,
     pub tile: i16,
     pub purchased_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
+pub struct UserWorldItemView {
+    pub id: uuid::Uuid,
+    pub user_id: uuid::Uuid,
+    pub world_item_id: uuid::Uuid,
+    pub tile: i16,
+    pub purchased_at: DateTime<Utc>,
+    pub name: String,
+    pub description: String,
+    pub price: i64,
+    pub category: WorldItemCategory,
 }

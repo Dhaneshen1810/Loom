@@ -195,6 +195,60 @@
   box-shadow: 0 0 0 0.12rem #fff6c2;
 }
 
+.planPlanted {
+  background:
+    radial-gradient(circle at 50% 62%, #3f7a2c 0 28%, transparent 30%),
+    radial-gradient(circle at 50% 38%, #8fce4f 0 22%, transparent 24%),
+    #4e8a32;
+}
+
+.treePairing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.treePairing p {
+  color: #f7f0d6;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  line-height: 1.05;
+}
+
+.treePairing em {
+  color: #ffe693;
+  font-style: normal;
+}
+
+.treePairing span {
+  color: #d5e8be;
+  font-size: 1.05rem;
+}
+
+.treeCaption {
+  min-width: 10rem;
+  padding: 0.45rem 0.7rem 0.5rem;
+  border: 0.12rem solid rgba(232, 214, 156, 0.28);
+  border-radius: 0.35rem;
+  color: #f7f0d6;
+  background: rgba(16, 36, 28, 0.88);
+  box-shadow: 0 0.35rem 1.1rem rgba(4, 16, 12, 0.35);
+  pointer-events: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.treeCaption p {
+  color: #ffe693;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.treeCaption span {
+  display: block;
+  color: #d5e8be;
+  font-size: 0.92rem;
+}
+
 .readout {
   grid-area: readout;
   align-self: end;

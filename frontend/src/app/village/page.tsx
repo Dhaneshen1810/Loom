@@ -6,6 +6,7 @@ import { LogoutButton } from "@/components/auth/logout-button";
 import { VillageCanvas } from "@/components/village/village-canvas";
 import { getSessionToken } from "@/lib/auth";
 import { getCoinBalance } from "@/lib/user";
+import { getPlacedWorldItems } from "@/lib/world-items";
 
 import styles from "./village.module.css";
 
@@ -21,6 +22,7 @@ export default async function VillagePage() {
   }
 
   const coins = await getCoinBalance();
+  const plantedItems = await getPlacedWorldItems();
 
   return (
     <main className={styles.scene}>
@@ -54,9 +56,9 @@ export default async function VillagePage() {
 
       <section className={styles.villageStage} aria-labelledby="village-heading">
         <h2 id="village-heading" className={styles.visuallyHidden}>
-          Village grounds, 7 by 7 empty plots
+          Village grounds, 7 by 7 plots
         </h2>
-        <VillageCanvas coins={coins} />
+        <VillageCanvas coins={coins} plantedItems={plantedItems} />
       </section>
     </main>
   );

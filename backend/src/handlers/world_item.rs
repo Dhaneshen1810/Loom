@@ -36,8 +36,7 @@ pub async fn world_item_purchase_handler(
 ) -> Result<impl IntoResponse, AppError> {
     let user_id = claims.sub;
 
-    // Validate tile > 0
-    if body.tile == 0 {
+    if !(1..=49).contains(&body.tile) {
         return Err(AppError::Invalid("Tile location is invalid.".into()));
     }
 
@@ -59,6 +58,9 @@ pub async fn world_item_purchase_handler(
         )),
         PurchaseWorldItemOutcome::WorldItemNotFound => {
             Err(AppError::NotFound("World item not found.".into()))
+        }
+        PurchaseWorldItemOutcome::TileOccupied => {
+            Err(AppError::Invalid("That plot already has something planted.".into()))
         }
         PurchaseWorldItemOutcome::InsufficientCoins {
             coins_owned,
