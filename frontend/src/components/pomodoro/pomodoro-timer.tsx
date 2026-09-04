@@ -14,7 +14,6 @@ const DURATION_OPTIONS_SECONDS = [
   ...Array.from({ length: 12 }, (_, index) => (index + 1) * 5 * 60),
 ];
 const ACTIVE_SESSION_KEY = "loom-active-focus-session";
-const DAILY_COUNT_KEY = "loom-daily-pomodoros";
 
 type ActiveSession = {
   sessionId: string;
@@ -39,24 +38,6 @@ type Phase =
   | "complete"
   | "error";
 
-function todayKey() {
-  return new Date().toLocaleDateString("en-CA");
-}
-
-function readDailyCount() {
-  try {
-    const stored = JSON.parse(
-      localStorage.getItem(DAILY_COUNT_KEY) ?? "{}",
-    ) as { date?: string; count?: number };
-
-    return stored.date === todayKey() && Number.isInteger(stored.count)
-      ? (stored.count ?? 0)
-      : 0;
-  } catch {
-    return 0;
-  }
-}
-
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds % 60;
@@ -73,6 +54,13 @@ function expectedCoinReward(seconds: number) {
   return Math.min(60, Math.max(5, Math.ceil(seconds / 300) * 5));
 }
 
+function durationOptionIndex(seconds: number) {
+  const index = DURATION_OPTIONS_SECONDS.indexOf(seconds);
+  return index === -1
+    ? DURATION_OPTIONS_SECONDS.indexOf(DEFAULT_DURATION_SECONDS)
+    : index;
+}
+
 export function PomodoroTimer() {
   const [selectedDuration, setSelectedDuration] = useState(
     DEFAULT_DURATION_SECONDS,
@@ -81,7 +69,6 @@ export function PomodoroTimer() {
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState("");
-  const [dailyCount, setDailyCount] = useState(0);
   const [coins, setCoins] = useState<number | null>(null);
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
   const finishingRef = useRef(false);
@@ -127,14 +114,6 @@ export function PomodoroTimer() {
                 ? Math.max(0, result.coins - previousCoins)
                 : expectedCoinReward(session.durationSeconds),
           );
-          setDailyCount((current) => {
-            const next = current + 1;
-            localStorage.setItem(
-              DAILY_COUNT_KEY,
-              JSON.stringify({ date: todayKey(), count: next }),
-            );
-            return next;
-          });
           setMessage("Pomodoro complete. Your focus has been harvested!");
           setPhase("complete");
         } else {
@@ -191,8 +170,6 @@ export function PomodoroTimer() {
     }
 
     const frame = window.requestAnimationFrame(() => {
-      setDailyCount(readDailyCount());
-
       if (storedSession) {
         setActiveSession(storedSession);
         setSelectedDuration(storedSession.durationSeconds);
@@ -331,11 +308,10 @@ export function PomodoroTimer() {
     }
   }
 
-  function adjustDuration(change: -1 | 1) {
-    const currentIndex = DURATION_OPTIONS_SECONDS.indexOf(selectedDuration);
+  function setDurationByIndex(index: number) {
     const nextIndex = Math.min(
       DURATION_OPTIONS_SECONDS.length - 1,
-      Math.max(0, currentIndex + change),
+      Math.max(0, Math.round(index)),
     );
     const nextDuration = DURATION_OPTIONS_SECONDS[nextIndex];
     setSelectedDuration(nextDuration);
@@ -354,6 +330,7 @@ export function PomodoroTimer() {
   const isBusy = phase === "starting" || phase === "finishing" || phase === "resetting";
   const isRunning = phase === "running" || phase === "finishing";
   const canAdjust = !activeSession && !isBusy;
+  const selectedDurationIndex = durationOptionIndex(selectedDuration);
 
   return (
     <main className={styles.scene}>
@@ -407,14 +384,6 @@ export function PomodoroTimer() {
           <span className={styles.villageIcon} aria-hidden="true" />
           Village
         </Link>
-        <button type="button" disabled>
-          <span className={styles.statsIcon} aria-hidden="true" />
-          Stats
-        </button>
-        <button type="button" disabled>
-          <span className={styles.historyIcon} aria-hidden="true" />
-          History
-        </button>
         <div className={styles.logoutWrap}>
           <LogoutButton />
         </div>
@@ -424,30 +393,31 @@ export function PomodoroTimer() {
         <p id="focus-title" className={styles.focusLabel}>
           {phase === "complete" ? "Harvest Complete" : "Focus Time"}
         </p>
-        <div className={styles.durationPicker} aria-label="Focus duration">
-          <button
-            type="button"
-            onClick={() => adjustDuration(-1)}
-            disabled={!canAdjust || selectedDuration === 0}
-            aria-label="Select previous focus duration"
-          >
-            −
-          </button>
-          <output aria-live="polite">
+        <div className={styles.durationPicker}>
+          <output htmlFor="focus-duration" aria-live="polite">
             {formatDuration(selectedDuration)}
           </output>
-          <button
-            type="button"
-            onClick={() => adjustDuration(1)}
-            disabled={
-              !canAdjust ||
-              selectedDuration ===
-                DURATION_OPTIONS_SECONDS[DURATION_OPTIONS_SECONDS.length - 1]
+          <input
+            id="focus-duration"
+            className={styles.durationSlider}
+            type="range"
+            min={0}
+            max={DURATION_OPTIONS_SECONDS.length - 1}
+            step={1}
+            value={selectedDurationIndex}
+            disabled={!canAdjust}
+            aria-label="Focus duration"
+            aria-valuetext={formatDuration(selectedDuration)}
+            style={
+              {
+                "--duration-progress": `${
+                  (selectedDurationIndex / (DURATION_OPTIONS_SECONDS.length - 1)) *
+                  100
+                }%`,
+              } as CSSProperties
             }
-            aria-label="Select next focus duration"
-          >
-            +
-          </button>
+            onChange={(event) => setDurationByIndex(Number(event.target.value))}
+          />
         </div>
         <time className={styles.time} dateTime={`PT${remaining}S`}>
           {formatTime(remaining)}
@@ -526,12 +496,6 @@ export function PomodoroTimer() {
           {message}
         </p>
       </section>
-
-      <div className={styles.dailyCounter}>
-        <span>Pomodoros Today:</span>
-        <i className={styles.miniTomato} aria-hidden="true" />
-        <strong>{dailyCount}</strong>
-      </div>
     </main>
   );
 }
