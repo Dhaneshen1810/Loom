@@ -207,6 +207,47 @@ export function PomodoroTimer() {
   }, []);
 
   useEffect(() => {
+    if (phase !== "running" && phase !== "finishing") {
+      return;
+    }
+
+    if (!("wakeLock" in navigator)) {
+      return;
+    }
+
+    let cancelled = false;
+    let sentinel: WakeLockSentinel | null = null;
+
+    async function keepDisplayOn() {
+      if (cancelled || document.visibilityState !== "visible") {
+        return;
+      }
+
+      try {
+        sentinel = await navigator.wakeLock.request("screen");
+      } catch {
+        // Power settings or an inactive tab can deny the lock.
+      }
+    }
+
+    void keepDisplayOn();
+
+    function onVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        void keepDisplayOn();
+      }
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      void sentinel?.release();
+    };
+  }, [phase]);
+
+  useEffect(() => {
     if (phase !== "running" || !activeSession) {
       return;
     }

@@ -39,7 +39,7 @@ export async function POST(
     tile = Number.NaN;
   }
 
-  if (!Number.isInteger(tile) || tile < 1 || tile > 49) {
+  if (!Number.isInteger(tile) || tile < 1 || tile > 100) {
     return NextResponse.json(
       { status: "error", message: "Choose a plot first." },
       { status: 400 },

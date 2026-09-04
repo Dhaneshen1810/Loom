@@ -8,7 +8,7 @@
   overflow: hidden;
   padding: 0.8rem clamp(0.7rem, 2.6vw, 1.8rem) 0.9rem;
   padding-bottom: max(0.9rem, env(safe-area-inset-bottom));
-  background: #1e3328;
+  background: linear-gradient(180deg, #7ec8e3 0%, #b8e4f2 28%, #8fd06a 62%, #5fa43a 100%);
 }
 
 .atmosphere {
@@ -16,10 +16,10 @@
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(circle at 18% 12%, rgba(198, 229, 106, 0.12), transparent 26%),
-    radial-gradient(circle at 86% 18%, rgba(90, 140, 72, 0.22), transparent 32%),
-    radial-gradient(ellipse at 50% 100%, rgba(0, 0, 0, 0.28), transparent 48%),
-    linear-gradient(180deg, #2a4634 0%, #1e3328 42%, #16251e 100%);
+    radial-gradient(circle at 82% 10%, rgba(255, 236, 160, 0.55), transparent 18%),
+    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.45), transparent 14%),
+    radial-gradient(circle at 28% 16%, rgba(255, 255, 255, 0.35), transparent 10%),
+    linear-gradient(180deg, #7ec8e3 0%, #b8e4f2 28%, #8fd06a 62%, #5fa43a 100%);
 }
 
 .chrome {

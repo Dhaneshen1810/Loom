@@ -3,10 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { LogoutButton } from "@/components/auth/logout-button";
-import { VillageCanvas } from "@/components/village/village-canvas";
+import { VillageBoard } from "@/components/village/village-board";
 import { getSessionToken } from "@/lib/auth";
 import { getCoinBalance } from "@/lib/user";
-import { getPlacedWorldItems } from "@/lib/world-items";
+import { getPlacedWorldItems, getWorldCatalog } from "@/lib/world-items";
 
 import styles from "./village.module.css";
 
@@ -21,8 +21,11 @@ export default async function VillagePage() {
     redirect("/login");
   }
 
-  const coins = await getCoinBalance();
-  const plantedItems = await getPlacedWorldItems();
+  const [coins, plantedItems, catalog] = await Promise.all([
+    getCoinBalance(),
+    getPlacedWorldItems(),
+    getWorldCatalog(),
+  ]);
 
   return (
     <main className={styles.scene}>
@@ -56,9 +59,9 @@ export default async function VillagePage() {
 
       <section className={styles.villageStage} aria-labelledby="village-heading">
         <h2 id="village-heading" className={styles.visuallyHidden}>
-          Village grounds, 7 by 7 plots
+          Village grounds, 10 by 10 plots
         </h2>
-        <VillageCanvas coins={coins} plantedItems={plantedItems} />
+        <VillageBoard coins={coins} plantedItems={plantedItems} catalog={catalog} />
       </section>
     </main>
   );

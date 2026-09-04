@@ -36,7 +36,7 @@ pub async fn world_item_purchase_handler(
 ) -> Result<impl IntoResponse, AppError> {
     let user_id = claims.sub;
 
-    if !(1..=49).contains(&body.tile) {
+    if !(1..=100).contains(&body.tile) {
         return Err(AppError::Invalid("Tile location is invalid.".into()));
     }
 

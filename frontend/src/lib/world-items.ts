@@ -52,7 +52,7 @@ function asCategory(value: unknown): WorldItemCategory | null {
 
 function asTile(value: unknown): number | null {
   const tile = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(tile) && tile >= 1 && tile <= 49 ? tile : null;
+  return Number.isInteger(tile) && tile >= 1 && tile <= 100 ? tile : null;
 }
 
 function parseWorldItem(value: BackendWorldItem): WorldItem | null {
