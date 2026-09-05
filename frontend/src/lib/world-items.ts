@@ -14,6 +14,8 @@ export type WorldItem = {
 export type PlacedWorldItem = WorldItem & {
   placementId: string;
   tile: number;
+  purchasedAt: string;
+  plantedOn: string;
 };
 
 type BackendListResponse<T> = {
@@ -32,6 +34,8 @@ type BackendWorldItem = {
 type BackendPlacedWorldItem = BackendWorldItem & {
   world_item_id?: unknown;
   tile?: unknown;
+  purchased_at?: unknown;
+  planted_on?: unknown;
 };
 
 const CATEGORIES = new Set<WorldItemCategory>([
@@ -52,7 +56,7 @@ function asCategory(value: unknown): WorldItemCategory | null {
 
 function asTile(value: unknown): number | null {
   const tile = typeof value === "number" ? value : Number(value);
-  return Number.isInteger(tile) && tile >= 1 && tile <= 100 ? tile : null;
+  return Number.isInteger(tile) && tile >= 1 && tile <= 25 ? tile : null;
 }
 
 function parseWorldItem(value: BackendWorldItem): WorldItem | null {
@@ -87,8 +91,10 @@ function parsePlacedWorldItem(value: BackendPlacedWorldItem): PlacedWorldItem | 
   });
 
   const tile = asTile(value.tile);
+  const purchasedAt = asPurchasedAt(value.purchased_at);
+  const plantedOn = asPlantedOn(value.planted_on, purchasedAt);
 
-  if (!item || typeof value.id !== "string" || tile === null) {
+  if (!item || typeof value.id !== "string" || tile === null || !plantedOn) {
     return null;
   }
 
@@ -96,7 +102,30 @@ function parsePlacedWorldItem(value: BackendPlacedWorldItem): PlacedWorldItem | 
     ...item,
     placementId: value.id,
     tile,
+    purchasedAt,
+    plantedOn,
   };
+}
+
+function asPurchasedAt(value: unknown): string {
+  if (typeof value === "string" && !Number.isNaN(new Date(value).getTime())) {
+    return value;
+  }
+
+  return "";
+}
+
+function asPlantedOn(value: unknown, purchasedAt: string): string {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  if (!purchasedAt) {
+    return "";
+  }
+
+  const planted = new Date(purchasedAt);
+  return Number.isNaN(planted.getTime()) ? "" : planted.toLocaleDateString("en-CA");
 }
 
 async function authorizedGet<T>(

@@ -36,14 +36,24 @@ pub async fn world_item_purchase_handler(
 ) -> Result<impl IntoResponse, AppError> {
     let user_id = claims.sub;
 
-    if !(1..=100).contains(&body.tile) {
+    if !(1..=25).contains(&body.tile) {
         return Err(AppError::Invalid("Tile location is invalid.".into()));
     }
 
+    let planted_on = body
+        .planted_on
+        .unwrap_or_else(|| chrono::Utc::now().date_naive());
+
     // User has enough coins
     // Add to user's inventory and reduce coins
-    let outcome =
-        purchase_world_item(&data.db, user_id, world_item_id, i16::from(body.tile)).await?;
+    let outcome = purchase_world_item(
+        &data.db,
+        user_id,
+        world_item_id,
+        i16::from(body.tile),
+        planted_on,
+    )
+    .await?;
 
     match outcome {
         PurchaseWorldItemOutcome::Purchased {

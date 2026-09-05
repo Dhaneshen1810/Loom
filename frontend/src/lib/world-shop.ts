@@ -19,6 +19,7 @@ type PurchaseResponse = {
 export async function purchaseWorldItem(
   worldItemId: string,
   tile: number,
+  plantedOn: string,
 ): Promise<PurchaseResult> {
   try {
     const response = await fetch(
@@ -26,7 +27,7 @@ export async function purchaseWorldItem(
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tile }),
+        body: JSON.stringify({ tile, planted_on: plantedOn }),
       },
     );
     const result = (await response.json()) as PurchaseResponse;

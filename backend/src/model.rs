@@ -150,6 +150,7 @@ pub struct NewWorldItem {
 #[derive(Debug, Deserialize)]
 pub struct PurchaseWorldItemSchema {
     pub tile: u8,
+    pub planted_on: Option<NaiveDate>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
@@ -159,6 +160,7 @@ pub struct UserWorldItem {
     pub world_item_id: uuid::Uuid,
     pub tile: i16,
     pub purchased_at: DateTime<Utc>,
+    pub planted_on: NaiveDate,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, sqlx::FromRow)]
@@ -168,6 +170,7 @@ pub struct UserWorldItemView {
     pub world_item_id: uuid::Uuid,
     pub tile: i16,
     pub purchased_at: DateTime<Utc>,
+    pub planted_on: NaiveDate,
     pub name: String,
     pub description: String,
     pub price: i64,

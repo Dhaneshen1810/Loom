@@ -59,7 +59,7 @@ export default async function VillagePage() {
 
       <section className={styles.villageStage} aria-labelledby="village-heading">
         <h2 id="village-heading" className={styles.visuallyHidden}>
-          Village grounds, 10 by 10 plots
+          Village grounds, 5 by 5 plots
         </h2>
         <VillageBoard coins={coins} plantedItems={plantedItems} catalog={catalog} />
       </section>

@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use chrono::NaiveDate;
+
 use crate::model::{UserWorldItem, UserWorldItemView};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -28,6 +30,7 @@ pub async fn find_user_world_items_by_user_id(
                 user_world_items.world_item_id,
                 user_world_items.tile,
                 user_world_items.purchased_at,
+                user_world_items.planted_on,
                 world_items.name,
                 world_items.description,
                 world_items.price,
@@ -47,6 +50,7 @@ pub async fn purchase_world_item(
     user_id: Uuid,
     world_item_id: Uuid,
     tile: i16,
+    planted_on: NaiveDate,
 ) -> Result<PurchaseWorldItemOutcome, sqlx::Error> {
     let mut transaction = pool.begin().await?;
 
@@ -92,13 +96,14 @@ pub async fn purchase_world_item(
     .await?;
 
     let user_world_item = match sqlx::query_as::<_, UserWorldItem>(
-        "INSERT INTO user_world_items (user_id, world_item_id, tile)
-         VALUES ($1, $2, $3)
-         RETURNING id, user_id, world_item_id, tile, purchased_at",
+        "INSERT INTO user_world_items (user_id, world_item_id, tile, planted_on)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, user_id, world_item_id, tile, purchased_at, planted_on",
     )
     .bind(user_id)
     .bind(world_item_id)
     .bind(tile)
+    .bind(planted_on)
     .fetch_one(&mut *transaction)
     .await
     {

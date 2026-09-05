@@ -31,15 +31,24 @@ export async function POST(
 
   const { id } = await params;
   let tile: number;
+  let plantedOn: string | null = null;
 
   try {
-    const body = (await request.json()) as { tile?: unknown };
+    const body = (await request.json()) as {
+      tile?: unknown;
+      planted_on?: unknown;
+    };
     tile = Number(body.tile);
+    plantedOn =
+      typeof body.planted_on === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(body.planted_on)
+        ? body.planted_on
+        : null;
   } catch {
     tile = Number.NaN;
   }
 
-  if (!Number.isInteger(tile) || tile < 1 || tile > 100) {
+  if (!Number.isInteger(tile) || tile < 1 || tile > 25) {
     return NextResponse.json(
       { status: "error", message: "Choose a plot first." },
       { status: 400 },
@@ -55,7 +64,10 @@ export async function POST(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tile }),
+        body: JSON.stringify({
+          tile,
+          planted_on: plantedOn,
+        }),
         cache: "no-store",
       },
     );

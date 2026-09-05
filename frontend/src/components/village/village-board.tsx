@@ -2,20 +2,38 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import {
+  type VillagePeriod,
+  GRID_SIZE,
+  TILE_COUNT,
+  VILLAGE_PERIODS,
+  WEEK_CELL_COUNT,
+  WEEK_GRID_SIZE,
+  daysOfLocalWeek,
+  localDateKey,
+  periodNoun,
+  weekPlotAt,
+} from "@/lib/village-period";
 import type { PlacedWorldItem, WorldItem } from "@/lib/world-items";
 import { purchaseWorldItem } from "@/lib/world-shop";
 
 import { TileSprite, treeArticle } from "./tile-sprite";
 import styles from "./village.module.css";
 
-export const GRID_SIZE = 10;
-export const TILE_COUNT = GRID_SIZE * GRID_SIZE;
-
 type VillageBoardProps = {
   coins: number | null;
   plantedItems: PlacedWorldItem[];
   catalog: WorldItem[];
 };
+
+type SelectedPlot = {
+  day: string;
+  tile: number;
+};
+
+function plotKey(day: string, tile: number) {
+  return `${day}:${tile}`;
+}
 
 export function tileLabel(id: number, occupant?: string) {
   const row = Math.floor((id - 1) / GRID_SIZE) + 1;
@@ -29,18 +47,21 @@ export function VillageBoard({
   plantedItems: initialPlantedItems,
   catalog,
 }: VillageBoardProps) {
-  const [selectedTile, setSelectedTile] = useState<number | null>(null);
+  const [selectedPlot, setSelectedPlot] = useState<SelectedPlot | null>(null);
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
   const [coins, setCoins] = useState(initialCoins);
   const [plantedItems, setPlantedItems] = useState(initialPlantedItems);
   const [storeOpen, setStoreOpen] = useState(false);
   const [planting, setPlanting] = useState(false);
   const [status, setStatus] = useState("");
+  const [period, setPeriod] = useState<VillagePeriod>("day");
+  const today = localDateKey();
+  const weekDays = useMemo(() => daysOfLocalWeek(), []);
   const occupied = useMemo(() => {
-    const map = new Map<number, PlacedWorldItem>();
+    const map = new Map<string, PlacedWorldItem>();
 
     for (const item of plantedItems) {
-      map.set(item.tile, item);
+      map.set(plotKey(item.plantedOn, item.tile), item);
     }
 
     return map;
@@ -55,10 +76,25 @@ export function VillageBoard({
       return (leftIndex === -1 ? 99 : leftIndex) - (rightIndex === -1 ? 99 : rightIndex);
     });
   }, [catalog]);
-  const focusedItem = selectedTile === null ? null : (occupied.get(selectedTile) ?? null);
-  const plantedCount = plantedItems.length;
-  const emptyCount = TILE_COUNT - plantedCount;
-  const row = selectedTile ? Math.floor((selectedTile - 1) / GRID_SIZE) + 1 : null;
+  const visibleItems = useMemo(() => {
+    if (period === "day") {
+      return plantedItems.filter((item) => item.plantedOn === today);
+    }
+
+    const weekKeys = new Set(weekDays.map((day) => day.key));
+    return plantedItems.filter((item) => weekKeys.has(item.plantedOn));
+  }, [period, plantedItems, today, weekDays]);
+  const focusedItem = selectedPlot
+    ? (occupied.get(plotKey(selectedPlot.day, selectedPlot.tile)) ?? null)
+    : null;
+  const plantedCount = visibleItems.length;
+  const emptyCount =
+    (period === "day" ? TILE_COUNT : TILE_COUNT * weekDays.length) - plantedCount;
+  const periodName = periodNoun(period);
+  const selectedTile = selectedPlot?.tile ?? null;
+  const row = selectedTile
+    ? Math.floor((selectedTile - 1) / GRID_SIZE) + 1
+    : null;
   const column = selectedTile ? ((selectedTile - 1) % GRID_SIZE) + 1 : null;
 
   useEffect(() => {
@@ -76,8 +112,12 @@ export function VillageBoard({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [storeOpen]);
 
-  async function plantOnTile(tile: number) {
-    if (!selectedTree || planting || occupied.has(tile)) {
+  async function plantOnTile(day: string, tile: number) {
+    if (!selectedTree || planting || period !== "day" || day !== today) {
+      return;
+    }
+
+    if (occupied.has(plotKey(day, tile))) {
       return;
     }
 
@@ -91,7 +131,7 @@ export function VillageBoard({
     setPlanting(true);
     setStatus(`Planting ${selectedTree.name.toLowerCase()}...`);
 
-    const result = await purchaseWorldItem(selectedTree.id, tile);
+    const result = await purchaseWorldItem(selectedTree.id, tile, day);
 
     if (result.ok) {
       setPlantedItems((current) => [
@@ -100,6 +140,8 @@ export function VillageBoard({
           ...selectedTree,
           placementId: result.placementId,
           tile,
+          purchasedAt: new Date().toISOString(),
+          plantedOn: day,
         },
       ]);
 
@@ -117,14 +159,125 @@ export function VillageBoard({
     setPlanting(false);
   }
 
-  function handleTileClick(id: number) {
-    setSelectedTile((current) => (current === id ? null : id));
+  function handleTileClick(day: string, tile: number, plantable: boolean) {
+    setSelectedPlot((current) =>
+      current?.day === day && current.tile === tile ? null : { day, tile },
+    );
 
-    if (occupied.has(id) || selectedTile === id) {
+    if (
+      !plantable ||
+      occupied.has(plotKey(day, tile)) ||
+      (selectedPlot?.day === day && selectedPlot.tile === tile)
+    ) {
       return;
     }
 
-    void plantOnTile(id);
+    void plantOnTile(day, tile);
+  }
+
+  function renderDayBoard() {
+    return (
+      <ol
+        className={styles.board}
+        aria-label={`Village plots, ${GRID_SIZE} by ${GRID_SIZE}`}
+      >
+        {Array.from({ length: TILE_COUNT }, (_, index) =>
+          renderTile(today, index + 1, index, true),
+        )}
+      </ol>
+    );
+  }
+
+  function renderWeekBoard() {
+    return (
+      <div className={styles.weekBoard}>
+        <div className={styles.weekLabels} aria-hidden="true">
+          {weekDays.map((day) => (
+            <span
+              key={day.key}
+              className={day.key === today ? styles.weekLabelToday : undefined}
+            >
+              {day.label}
+            </span>
+          ))}
+        </div>
+        <ol
+          className={`${styles.board} ${styles.boardWeek}`}
+          aria-label={`Weekly village, ${WEEK_GRID_SIZE} by ${WEEK_GRID_SIZE}`}
+        >
+          {Array.from({ length: WEEK_CELL_COUNT }, (_, index) => {
+            const plot = weekPlotAt(index);
+
+            if (!plot) {
+              const shade = (Math.floor(index / WEEK_GRID_SIZE) + (index % WEEK_GRID_SIZE)) % 2 === 0;
+
+              return (
+                <li key={`path-${index}`}>
+                  <span
+                    className={`${styles.tile} ${styles.tilePath} ${
+                      shade ? styles.tileLight : styles.tileDark
+                    }`}
+                    aria-hidden="true"
+                  />
+                </li>
+              );
+            }
+
+            const day = weekDays[plot.dayIndex];
+
+            if (!day) {
+              return (
+                <li key={`path-${index}`}>
+                  <span className={`${styles.tile} ${styles.tilePath}`} aria-hidden="true" />
+                </li>
+              );
+            }
+
+            return renderTile(day.key, plot.tile, index, day.key === today, day.label);
+          })}
+        </ol>
+      </div>
+    );
+  }
+
+  function renderTile(
+    day: string,
+    tile: number,
+    shadeIndex: number,
+    plantable: boolean,
+    dayLabel?: string,
+  ) {
+    const occupant = occupied.get(plotKey(day, tile));
+    const shade =
+      (Math.floor(shadeIndex / (dayLabel ? WEEK_GRID_SIZE : GRID_SIZE)) +
+        (shadeIndex % (dayLabel ? WEEK_GRID_SIZE : GRID_SIZE))) %
+        2 ===
+      0;
+    const selected = selectedPlot?.day === day && selectedPlot.tile === tile;
+    const name = tileLabel(tile, occupant?.name.toLowerCase());
+
+    return (
+      <li key={`${day}-${tile}`}>
+        <button
+          type="button"
+          className={`${styles.tile} ${shade ? styles.tileLight : styles.tileDark} ${
+            occupant ? styles.tilePlanted : ""
+          } ${selected ? styles.tileSelected : ""}`}
+          onClick={() => handleTileClick(day, tile, plantable)}
+          disabled={planting || (!plantable && !occupant)}
+          aria-label={dayLabel ? `${dayLabel}, ${name}` : name}
+          aria-pressed={selected}
+        >
+          {occupant ? (
+            <TileSprite name={occupant.name} />
+          ) : selectedTree && plantable && selected ? (
+            <span className={styles.spriteGhost}>
+              <TileSprite name={selectedTree.name} />
+            </span>
+          ) : null}
+        </button>
+      </li>
+    );
   }
 
   return (
@@ -133,14 +286,43 @@ export function VillageBoard({
         <p className={styles.hint}>
           {selectedTree
             ? `Tap an empty plot to plant ${treeArticle(selectedTree.name)} ${selectedTree.name.toLowerCase()}`
-            : "Open the store to pick a tree"}
+            : plantedCount === 0
+              ? `No trees ${periodName}`
+              : plantedCount === 1
+                ? `1 tree ${periodName}`
+                : `${plantedCount} trees ${periodName}`}
         </p>
+        <div className={styles.periodToggle} role="group" aria-label="Village period">
+          {VILLAGE_PERIODS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              className={period === option ? styles.periodActive : undefined}
+              aria-pressed={period === option}
+              onClick={() => {
+                setPeriod(option);
+                setSelectedPlot(null);
+
+                if (option !== "day") {
+                  setStoreOpen(false);
+                  setSelectedTreeId(null);
+                  setStatus("");
+                }
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
         <div className={styles.counters}>
           <span className={styles.counter} aria-label={`${coins ?? 0} coins`}>
             <i className={styles.coinIcon} aria-hidden="true" />
             {coins === null ? "--" : coins}
           </span>
-          <span className={styles.counter} aria-label={`${plantedCount} planted plots`}>
+          <span
+            className={styles.counter}
+            aria-label={`${plantedCount} trees ${periodName}`}
+          >
             <i className={styles.sproutIcon} aria-hidden="true" />
             {plantedCount}
           </span>
@@ -152,40 +334,10 @@ export function VillageBoard({
       </div>
 
       <div className={styles.boardWrap}>
-        <ol className={styles.board} aria-label={`Village plots, ${GRID_SIZE} by ${GRID_SIZE}`}>
-          {Array.from({ length: TILE_COUNT }, (_, index) => {
-            const id = index + 1;
-            const occupant = occupied.get(id);
-            const rowIndex = Math.floor(index / GRID_SIZE);
-            const columnIndex = index % GRID_SIZE;
-            const shade = (rowIndex + columnIndex) % 2 === 0;
-
-            return (
-              <li key={id}>
-                <button
-                  type="button"
-                  className={`${styles.tile} ${shade ? styles.tileLight : styles.tileDark} ${
-                    occupant ? styles.tilePlanted : ""
-                  } ${selectedTile === id ? styles.tileSelected : ""}`}
-                  onClick={() => handleTileClick(id)}
-                  disabled={planting}
-                  aria-label={tileLabel(id, occupant?.name.toLowerCase())}
-                  aria-pressed={selectedTile === id}
-                >
-                  {occupant ? (
-                    <TileSprite name={occupant.name} />
-                  ) : selectedTree && selectedTile === id ? (
-                    <span className={styles.spriteGhost}>
-                      <TileSprite name={selectedTree.name} />
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+        {period === "day" ? renderDayBoard() : renderWeekBoard()}
       </div>
 
+      {period === "day" ? (
       <button
         className={styles.storeTab}
         type="button"
@@ -195,7 +347,9 @@ export function VillageBoard({
       >
         Store
       </button>
+      ) : null}
 
+      {period === "day" ? (
       <aside
         id="village-store"
         className={`${styles.store} ${storeOpen ? styles.storeOpen : ""}`}
@@ -229,7 +383,9 @@ export function VillageBoard({
                     } ${unaffordable ? styles.storeItemCostly : ""}`}
                     onClick={() => {
                       setStatus("");
-                      setSelectedTreeId((current) => (current === item.id ? null : item.id));
+                      setSelectedTreeId((current) =>
+                        current === item.id ? null : item.id,
+                      );
                     }}
                     aria-pressed={selectedTreeId === item.id}
                     disabled={planting}
@@ -248,6 +404,7 @@ export function VillageBoard({
           </ul>
         )}
       </aside>
+      ) : null}
 
       <div className={styles.readout} role="status" aria-live="polite">
         {status ? (
@@ -262,15 +419,17 @@ export function VillageBoard({
               Tile {focusedItem.tile} · {focusedItem.description}
             </span>
           </header>
-        ) : selectedTile === null ? (
+        ) : selectedPlot === null ? (
           <p>
             {selectedTree
               ? `Choose a plot for ${treeArticle(selectedTree.name)} ${selectedTree.name.toLowerCase()}.`
-              : "Open the store, pick a tree, then tap an empty plot."}
+              : period === "day"
+                ? "Open the store, pick a tree, then tap an empty plot."
+                : "Switch to day view to plant a tree."}
           </p>
         ) : (
           <p>
-            <strong>Tile {selectedTile}</strong>
+            <strong>Tile {selectedPlot.tile}</strong>
             <span>
               Row {row}, column {column} · empty
               {selectedTree

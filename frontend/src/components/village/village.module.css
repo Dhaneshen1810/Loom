@@ -29,6 +29,48 @@
   gap: 0.5rem;
 }
 
+.periodToggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 0.12rem solid #4d2b1d;
+  border-radius: 999px;
+  background: #f2cb82;
+}
+
+.periodToggle button {
+  min-width: 3.5rem;
+  padding: 0.22rem 0.7rem;
+  border: 0;
+  border-right: 0.1rem solid #4d2b1d;
+  color: #4c2b1d;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.05rem;
+  text-transform: capitalize;
+}
+
+.periodToggle button:last-child {
+  border-right: 0;
+}
+
+.periodToggle button:hover,
+.periodToggle button:focus-visible {
+  background: #ffdda0;
+}
+
+.periodToggle button:focus-visible {
+  outline: 0.16rem solid #fff2bd;
+  outline-offset: -0.12rem;
+}
+
+.periodToggle button.periodActive,
+.periodToggle button.periodActive:hover,
+.periodToggle button.periodActive:focus-visible {
+  background: #fff0bd;
+  box-shadow: inset 0.1rem 0.1rem #ffe9ae;
+}
+
 .hint {
   padding: 0.22rem 0.65rem;
   border: 0.1rem solid #4d2b1d;
@@ -95,14 +137,43 @@
   container-type: size;
 }
 
-.board {
-  display: grid;
+.weekBoard {
+  position: relative;
   width: min(100%, 32rem, 100cqh);
   aspect-ratio: 1 / 1;
+}
+
+.weekLabels {
+  position: absolute;
+  z-index: 2;
+  inset: 0.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  pointer-events: none;
+}
+
+.weekLabels span {
+  padding: 0.12rem 0.2rem;
+  color: #fff0bd;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-shadow: 1px 1px #3d2414;
+  text-transform: uppercase;
+}
+
+.weekLabelToday {
+  color: #ffe566;
+}
+
+.board {
+  display: grid;
+  width: min(100%, 24rem, 100cqh);
+  aspect-ratio: 1 / 1;
   height: auto;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
-  grid-template-rows: repeat(10, minmax(0, 1fr));
-  gap: 0.12rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 0.16rem;
   padding: 0.4rem;
   list-style: none;
   border: 0.2rem solid #3d2414;
@@ -110,6 +181,13 @@
   box-shadow:
     inset 0 0 0 0.18rem #c48a4a,
     0 0.35rem 0 #3d2414;
+}
+
+.boardWeek {
+  width: 100%;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  grid-template-rows: repeat(15, minmax(0, 1fr));
+  gap: 0.08rem;
 }
 
 .board > li {
@@ -155,8 +233,19 @@
   box-shadow: 0 0 0 0.12rem #c48a20;
 }
 
-.tile:hover {
+.tile:hover:not(:disabled) {
   filter: brightness(1.06);
+}
+
+.tile:disabled {
+  cursor: default;
+}
+
+.tilePath {
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 0.38;
+  pointer-events: none;
 }
 
 .tile:focus-visible {
@@ -415,6 +504,16 @@
 
   .counter {
     font-size: 1.08rem;
+  }
+
+  .periodToggle button {
+    min-width: 3.1rem;
+    padding-inline: 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .weekLabels span {
+    font-size: 0.68rem;
   }
 }
 
