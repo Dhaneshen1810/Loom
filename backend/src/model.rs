@@ -58,6 +58,7 @@ pub struct FocusSession {
     pub start_time: DateTime<Utc>,
     pub end_time: Option<DateTime<Utc>>,
     pub goal_seconds: i64,
+    pub goal_description: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -74,22 +75,47 @@ pub struct NewSession {
     pub start_time: DateTime<Utc>,
     pub end_time: Option<DateTime<Utc>>,
     pub goal_seconds: i64,
+    pub goal_description: Option<String>,
 }
 
 impl NewSession {
-    pub fn new(user_id: uuid::Uuid, goal_seconds: i64) -> Self {
+    pub fn new(user_id: uuid::Uuid, goal_seconds: i64, goal_description: Option<String>) -> Self {
         Self {
             user_id,
             start_time: Utc::now(),
             end_time: None,
             goal_seconds,
+            goal_description,
         }
     }
 }
 
+pub const MAX_GOAL_DESCRIPTION_LEN: usize = 140;
+
 #[derive(Debug, Deserialize)]
 pub struct CreateFocusSessionSchema {
     pub goal_seconds: i64,
+    pub goal_description: Option<String>,
+}
+
+impl CreateFocusSessionSchema {
+    pub fn normalized_goal_description(&self) -> Result<Option<String>, String> {
+        let Some(raw) = self.goal_description.as_deref() else {
+            return Ok(None);
+        };
+
+        let trimmed = raw.trim();
+
+        if trimmed.is_empty() {
+            return Ok(None);
+        }
+
+        if trimmed.chars().count() > MAX_GOAL_DESCRIPTION_LEN {
+            return Err("Keep your goal under 140 characters.".into());
+        }
+
+        Ok(Some(trimmed.to_string()))
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, sqlx::Type)]

@@ -4,6 +4,10 @@ import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { LogoutButton } from "@/components/auth/logout-button";
+import {
+  MAX_GOAL_DESCRIPTION_LENGTH,
+  normalizeGoalDescription,
+} from "@/lib/focus-session";
 
 import styles from "./pomodoro.module.css";
 
@@ -19,6 +23,7 @@ type ActiveSession = {
   sessionId: string;
   endsAt: number;
   durationSeconds: number;
+  goalDescription?: string | null;
 };
 
 type ApiResponse = {
@@ -71,6 +76,7 @@ export function PomodoroTimer() {
   const [message, setMessage] = useState("");
   const [coins, setCoins] = useState<number | null>(null);
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
+  const [goalDescription, setGoalDescription] = useState("");
   const finishingRef = useRef(false);
   const coinsRef = useRef<number | null>(null);
 
@@ -163,7 +169,13 @@ export function PomodoroTimer() {
         Number.isFinite(stored.endsAt) &&
         Number.isFinite(stored.durationSeconds)
       ) {
-        storedSession = stored;
+        storedSession = {
+          ...stored,
+          goalDescription:
+            typeof stored.goalDescription === "string"
+              ? stored.goalDescription
+              : null,
+        };
       }
     } catch {
       localStorage.removeItem(ACTIVE_SESSION_KEY);
@@ -172,6 +184,7 @@ export function PomodoroTimer() {
     const frame = window.requestAnimationFrame(() => {
       if (storedSession) {
         setActiveSession(storedSession);
+        setGoalDescription(storedSession.goalDescription ?? "");
         setSelectedDuration(storedSession.durationSeconds);
         setRemaining(
           Math.max(0, Math.ceil((storedSession.endsAt - Date.now()) / 1000)),
@@ -271,6 +284,14 @@ export function PomodoroTimer() {
       return;
     }
 
+    const description = normalizeGoalDescription(goalDescription);
+
+    if (!description.ok) {
+      setMessage(description.message);
+      setPhase("error");
+      return;
+    }
+
     setPhase("starting");
     setMessage("");
     setCoinsAwarded(null);
@@ -279,7 +300,10 @@ export function PomodoroTimer() {
       const response = await fetch("/api/focus-session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal_seconds: durationSeconds }),
+        body: JSON.stringify({
+          goal_seconds: durationSeconds,
+          goal_description: description.value,
+        }),
       });
       const result = (await response.json()) as ApiResponse;
 
@@ -295,6 +319,7 @@ export function PomodoroTimer() {
         sessionId: result.sessionId,
         endsAt: Date.now() + durationSeconds * 1000,
         durationSeconds,
+        goalDescription: description.value,
       };
       localStorage.setItem(ACTIVE_SESSION_KEY, JSON.stringify(session));
       setActiveSession(session);
@@ -393,6 +418,29 @@ export function PomodoroTimer() {
         <p id="focus-title" className={styles.focusLabel}>
           {phase === "complete" ? "Harvest Complete" : "Focus Time"}
         </p>
+        <label className={styles.goalField} htmlFor="focus-goal">
+          <span className={styles.goalLabel}>Goal</span>
+          <input
+            id="focus-goal"
+            type="text"
+            value={goalDescription}
+            maxLength={MAX_GOAL_DESCRIPTION_LENGTH}
+            disabled={!canAdjust}
+            autoComplete="off"
+            placeholder="What are you focusing on?"
+            onChange={(event) => setGoalDescription(event.target.value)}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                canAdjust &&
+                selectedDuration > 0
+              ) {
+                event.preventDefault();
+                void startTimer();
+              }
+            }}
+          />
+        </label>
         <div className={styles.durationPicker}>
           <output htmlFor="focus-duration" aria-live="polite">
             {formatDuration(selectedDuration)}

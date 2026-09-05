@@ -39,26 +39,20 @@ pub async fn start_focus_session_handler(
     Extension(claims): Extension<Claims>,
     State(data): State<Arc<AppState>>,
     Json(body): Json<CreateFocusSessionSchema>,
-) -> impl IntoResponse {
+) -> Result<impl IntoResponse, AppError> {
     let user_id = claims.sub;
+    let goal_description = body
+        .normalized_goal_description()
+        .map_err(AppError::Invalid)?;
 
-    let new_session = NewSession::new(user_id, body.goal_seconds as i64);
+    let new_session = NewSession::new(user_id, body.goal_seconds, goal_description);
+    let session = create_focus_session(&data.db, &new_session).await?;
 
-    match create_focus_session(&data.db, &new_session).await {
-        Ok(session) => {
-            return Json(serde_json::json!({
-                "status": "success",
-                "message": "Session has started",
-                "session_id": session.id,
-            }));
-        }
-        Err(_) => {
-            return Json(serde_json::json!({
-                "status": "success",
-                "message": "Session has started"
-            }));
-        }
-    };
+    Ok(Json(serde_json::json!({
+        "status": "success",
+        "message": "Session has started",
+        "session_id": session.id,
+    })))
 }
 
 pub async fn end_focus_session_handler(

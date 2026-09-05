@@ -30,11 +30,16 @@ pub async fn create_focus_session(
     pool: &PgPool,
     new_session: &NewSession,
 ) -> Result<FocusSession, sqlx::Error> {
-    sqlx::query_as::<_, FocusSession>("INSERT INTO focus_sessions (user_id, start_time, end_time, goal_seconds) VALUES ($1, $2, $3, $4) RETURNING id, user_id, start_time, end_time, goal_seconds, created_at, updated_at")
-        .bind(&new_session.user_id)
-        .bind(&new_session.start_time)
-        .bind(&new_session.end_time)
-        .bind(new_session.goal_seconds)
+    sqlx::query_as::<_, FocusSession>(
+        "INSERT INTO focus_sessions (user_id, start_time, end_time, goal_seconds, goal_description)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, user_id, start_time, end_time, goal_seconds, goal_description, created_at, updated_at",
+    )
+    .bind(&new_session.user_id)
+    .bind(&new_session.start_time)
+    .bind(&new_session.end_time)
+    .bind(new_session.goal_seconds)
+    .bind(&new_session.goal_description)
     .fetch_one(pool)
     .await
 }
@@ -43,9 +48,12 @@ pub async fn update_focus_session(
     pool: &PgPool,
     session: &FocusSession,
 ) -> Result<FocusSession, sqlx::Error> {
-    sqlx::query_as::<_, FocusSession>("UPDATE focus_sessions SET end_time = $1 WHERE id = $2 AND end_time IS NULL RETURNING id, user_id, start_time, end_time, goal_seconds, created_at, updated_at")
-        .bind(&session.end_time)
-        .bind(&session.id)
+    sqlx::query_as::<_, FocusSession>(
+        "UPDATE focus_sessions SET end_time = $1 WHERE id = $2 AND end_time IS NULL
+         RETURNING id, user_id, start_time, end_time, goal_seconds, goal_description, created_at, updated_at",
+    )
+    .bind(&session.end_time)
+    .bind(&session.id)
     .fetch_one(pool)
     .await
 }

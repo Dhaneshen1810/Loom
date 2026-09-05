@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSessionToken } from "@/lib/auth";
 import { backendUrl } from "@/lib/backend";
+import { normalizeGoalDescription } from "@/lib/focus-session";
 
 type StartResponse = {
   status?: string;
@@ -20,10 +21,25 @@ export async function POST(request: Request) {
   }
 
   let goalSeconds: number;
+  let goalDescription: string | null = null;
 
   try {
-    const body = (await request.json()) as { goal_seconds?: unknown };
+    const body = (await request.json()) as {
+      goal_seconds?: unknown;
+      goal_description?: unknown;
+    };
     goalSeconds = Number(body.goal_seconds);
+
+    const description = normalizeGoalDescription(body.goal_description);
+
+    if (!description.ok) {
+      return NextResponse.json(
+        { status: "error", message: description.message },
+        { status: 400 },
+      );
+    }
+
+    goalDescription = description.value;
   } catch {
     goalSeconds = Number.NaN;
   }
@@ -42,7 +58,10 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ goal_seconds: goalSeconds }),
+      body: JSON.stringify({
+        goal_seconds: goalSeconds,
+        goal_description: goalDescription,
+      }),
       cache: "no-store",
     });
     const payload = (await response.json()) as StartResponse;
@@ -55,7 +74,10 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           status: "error",
-          message: payload.message ?? "The focus session could not be started.",
+          message:
+            typeof payload.session_id === "string"
+              ? (payload.message ?? "The focus session could not be started.")
+              : "The focus session could not be started.",
         },
         { status: response.ok ? 502 : response.status },
       );

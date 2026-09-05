@@ -59,9 +59,9 @@ pub async fn world_item_purchase_handler(
         PurchaseWorldItemOutcome::WorldItemNotFound => {
             Err(AppError::NotFound("World item not found.".into()))
         }
-        PurchaseWorldItemOutcome::TileOccupied => {
-            Err(AppError::Invalid("That plot already has something planted.".into()))
-        }
+        PurchaseWorldItemOutcome::TileOccupied => Err(AppError::Invalid(
+            "That plot already has something planted.".into(),
+        )),
         PurchaseWorldItemOutcome::InsufficientCoins {
             coins_owned,
             world_item_price,
