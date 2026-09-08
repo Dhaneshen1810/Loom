@@ -56,6 +56,28 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
+  async function startGuestFarm() {
+    setError("");
+    setIsPending(true);
+
+    try {
+      const response = await fetch("/api/auth/guest", { method: "POST" });
+      const result = (await response.json()) as AuthResponse;
+
+      if (!response.ok || result.status !== "success") {
+        setError(result.message ?? "The guest farm could not be opened.");
+        return;
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setError("The farm is out of reach. Please try again in a moment.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
   return (
     <form className={styles.authForm} onSubmit={handleSubmit}>
       {isRegister && (
@@ -132,6 +154,17 @@ export function AuthForm({ mode }: AuthFormProps) {
           : isRegister
             ? "Create Farm"
             : "Log In"}
+      </button>
+
+      <p className={styles.guestDivider}>or</p>
+
+      <button
+        className={styles.guestButton}
+        type="button"
+        disabled={isPending}
+        onClick={() => void startGuestFarm()}
+      >
+        Try the farm
       </button>
 
       <p className={styles.switchPrompt}>

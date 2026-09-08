@@ -4,6 +4,8 @@ Grow your world, one focused moment at a time.
 
 Loom is a cozy pomodoro app. Finish a focus session, earn coins, and plant trees in Loom Valley.
 
+Try it at [loom-pomodoro.vercel.app](https://loom-pomodoro.vercel.app/). You can log in, create an account, or tap **Try the farm** to look around without signing up.
+
 <p align="center">
   <img src="docs/screenshots/timer.png" alt="The Loom pomodoro timer with a 25 minute session ready to start" width="720" />
 </p>

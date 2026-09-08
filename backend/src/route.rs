@@ -1,7 +1,7 @@
 use crate::handlers::user_world_items::get_user_world_items_handler;
 use crate::handlers::world_item::get_world_items_handler;
 use crate::handlers::{
-    auth::{login_handler, register_user_handler},
+    auth::{guest_session_handler, login_handler, register_user_handler},
     focus_session::{
         end_focus_session_handler, get_focus_sessions_handler, start_focus_session_handler,
     },
@@ -25,6 +25,7 @@ pub fn create_router(app_state: Arc<AppState>) -> Router {
         .route("/api/healthchecker", get(health_checker_handler))
         .route("/api/auth/register", post(register_user_handler))
         .route("/api/auth/login", post(login_handler))
+        .route("/api/auth/guest", post(guest_session_handler))
         .route(
             "/api/focus-session/start",
             post(start_focus_session_handler).layer(middleware::from_fn_with_state(

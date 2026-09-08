@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::{
     AppState,
     model::{Claims, LoginUserSchema, NewUser, RegisterUserSchema},
-    repositories::user::{create_user, find_user_by_email},
+    repositories::user::{create_user, find_user_by_email, update_user_coins},
 };
 use argon2::{Argon2, PasswordHash, PasswordVerifier, password_hash::PasswordHasher};
 use axum::{Json, extract::State, response::IntoResponse};
@@ -133,6 +133,49 @@ pub async fn login_handler(
                 "message": "User not found."
             }));
         }
+    }
+}
+
+pub async fn guest_session_handler(State(data): State<Arc<AppState>>) -> impl IntoResponse {
+    let guest_id = uuid::Uuid::new_v4();
+    let password_hash = match hash_password(&guest_id.to_string()) {
+        Ok(hash) => hash,
+        Err(_) => {
+            return Json(serde_json::json!({
+                "status": "error",
+                "message": "Failed to create a guest farm."
+            }));
+        }
+    };
+
+    let new_user = NewUser {
+        name: "Guest farmer".to_string(),
+        email: format!("guest-{guest_id}@guests.loom"),
+        password_hash,
+    };
+
+    let user = match create_user(&data.db, &new_user).await {
+        Ok(user) => user,
+        Err(_) => {
+            return Json(serde_json::json!({
+                "status": "error",
+                "message": "Failed to create a guest farm."
+            }));
+        }
+    };
+
+    let _ = update_user_coins(&data.db, user.id, 25).await;
+
+    match generate_jwt_token(user.id, &data.env.jwt_secret, data.env.jwt_maxage.into()) {
+        Ok(token) => Json(serde_json::json!({
+            "status": "success",
+            "message": "Welcome to the valley.",
+            "token": token,
+        })),
+        Err(_) => Json(serde_json::json!({
+            "status": "error",
+            "message": "Failed to generate JWT token."
+        })),
     }
 }
 

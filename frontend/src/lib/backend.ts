@@ -80,3 +80,54 @@ export async function forwardAuthRequest(
     );
   }
 }
+
+export async function startGuestSession() {
+  try {
+    const backendResponse = await fetch(`${backendUrl()}/api/auth/guest`, {
+      method: "POST",
+      cache: "no-store",
+    });
+    const payload = (await backendResponse.json()) as BackendAuthResponse;
+
+    if (
+      !backendResponse.ok ||
+      payload.status !== "success" ||
+      typeof payload.token !== "string"
+    ) {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: payload.message ?? "The guest farm could not be opened.",
+        },
+        { status: backendResponse.ok ? 401 : backendResponse.status },
+      );
+    }
+
+    const response = NextResponse.json({
+      status: "success",
+      message: payload.message ?? "Welcome to Loom.",
+    });
+
+    try {
+      attachSessionCookie(response, payload.token);
+    } catch {
+      return NextResponse.json(
+        {
+          status: "error",
+          message: "The server returned an invalid session. Please try again.",
+        },
+        { status: 502 },
+      );
+    }
+
+    return response;
+  } catch {
+    return NextResponse.json(
+      {
+        status: "error",
+        message: "The farm is out of reach. Is the backend running?",
+      },
+      { status: 502 },
+    );
+  }
+}

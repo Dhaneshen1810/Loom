@@ -477,6 +477,40 @@
   opacity: 0.78;
 }
 
+.guestDivider {
+  color: #8a5a32;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: lowercase;
+}
+
+.guestButton {
+  min-height: 3.1rem;
+  margin-inline: 1.3rem;
+  border: 0.18rem solid #664020;
+  border-radius: 0.3rem;
+  color: #4c2b1d;
+  background: #efc576;
+  box-shadow: 0 0.22rem 0 #714522;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+.guestButton:hover:not(:disabled) {
+  background: #ffdda0;
+}
+
+.guestButton:focus-visible {
+  outline: 0.18rem solid #fff2bd;
+  outline-offset: 0.12rem;
+}
+
+.guestButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .switchPrompt {
   color: #58331f;
   font-size: 1.3rem;
